@@ -1,0 +1,40 @@
+# Virtual envs
+.venv/
+venv/
+env/
+
+# Python
+__pycache__/
+*.py[cod]
+
+# Flask
+instance/
+
+# Databases
+*.db
+*.sqlite
+*.sqlite3
+
+# Environment variables
+.env
+.env.*
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build artifacts
+dist/
+build/
+
+# Logs
+*.log
+
+# Temporary challenge assets
+tmp/
+uploads/
+generated/
