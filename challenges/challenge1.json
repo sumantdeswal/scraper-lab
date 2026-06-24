@@ -1,0 +1,9 @@
+{
+  "name": "Plain HTML Images",
+  "difficulty": "Easy",
+  "goal": [
+    "Extract title",
+    "Extract images",
+    "Extract description"
+  ]
+}

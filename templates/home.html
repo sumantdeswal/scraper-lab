@@ -7,9 +7,17 @@
 
 <h1>Scraper Lab</h1>
 
-<ul>
-    <li><a href="/challenge/1">Challenge 1</a></li>
-</ul>
+{% for id, challenge in challenges.items() %}
+
+<div>
+    <h3>{{ challenge.name }}</h3>
+
+    <a href="/challenge/{{ id }}">
+        Open Challenge
+    </a>
+</div>
+
+{% endfor %}
 
 </body>
 </html>
