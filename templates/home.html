@@ -7,12 +7,13 @@
 
 <h1>Scraper Lab</h1>
 
-{% for id, challenge in challenges.items() %}
+{% for slug, challenge in challenges.items() %}
 
 <div>
-    <h3>{{ challenge.name }}</h3>
+    <h3>{{ challenge.number }}. {{ challenge.title }}</h3>
+    <p>{{ challenge.description }}</p>
 
-    <a href="/challenge/{{ id }}">
+    <a href="{{ url_for('challenge', challenge_id=slug) }}">
         Open Challenge
     </a>
 </div>

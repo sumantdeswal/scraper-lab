@@ -1,14 +1,9 @@
 from flask import Flask, render_template
 import os
 
-app = Flask(__name__)
+from data.challenges import CHALLENGES
 
-CHALLENGES = {
-    1: {
-        "name": "Plain HTML Images",
-        "difficulty": "Easy"
-    }
-}
+app = Flask(__name__)
 
 @app.route("/")
 def home():
@@ -17,16 +12,15 @@ def home():
         challenges=CHALLENGES
     )
 
-@app.route("/challenge/<int:challenge_id>")
+@app.route("/challenge/<challenge_id>")
 def challenge(challenge_id):
-
     challenge = CHALLENGES.get(challenge_id)
 
     if not challenge:
         return "Challenge Not Found", 404
 
     return render_template(
-        f"challenge_{challenge_id}.html",
+        "challenge.html",
         challenge=challenge
     )
 
