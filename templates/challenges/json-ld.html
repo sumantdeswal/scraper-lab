@@ -1,0 +1,49 @@
+<section class="experiment">
+    <h2>Challenge 7</h2>
+    <h3>JSON-LD</h3>
+    <p>Structured data is exposed via JSON-LD in a script tag using schema.org vocabulary.</p>
+
+    <div class="product-card">
+        <h4>Structured Product Data</h4>
+        <p>Search engines and scrapers can use JSON-LD to understand this product.</p>
+    </div>
+
+    <button id="show-jsonld-data" type="button">Show Parsed JSON-LD</button>
+    <pre id="jsonld-output"></pre>
+
+    <script type="application/ld+json">
+        {
+            "@context": "https://schema.org/",
+            "@type": "Product",
+            "name": "Research Jacket",
+            "description": "A lightweight jacket used to demonstrate JSON-LD delivery.",
+            "image": [
+                "{{ url_for('static', filename='images/look1.jpg') }}",
+                "{{ url_for('static', filename='images/look2.jpg') }}",
+                "{{ url_for('static', filename='images/look3.jpg') }}"
+            ],
+            "sku": "RL-1006",
+            "offers": {
+                "@type": "Offer",
+                "priceCurrency": "USD",
+                "price": "39.99",
+                "availability": "https://schema.org/InStock"
+            }
+        }
+    </script>
+
+    <script>
+        document.getElementById('show-jsonld-data').addEventListener('click', function () {
+            const raw = document.querySelector('script[type="application/ld+json"]').textContent;
+            const data = JSON.parse(raw);
+            const output = {
+                name: data.name,
+                description: data.description,
+                images: data.image,
+                sku: data.sku,
+                price: data.offers.price
+            };
+            document.getElementById('jsonld-output').textContent = JSON.stringify(output, null, 2);
+        });
+    </script>
+</section>

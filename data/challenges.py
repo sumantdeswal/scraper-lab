@@ -28,5 +28,17 @@ CHALLENGES = {
         "title": "Lazy Loading",
         "description": "Images that load only when they are needed.",
         "template": "challenges/lazy-loading.html"
+    },
+    "embedded-json": {
+        "number": 6,
+        "title": "Embedded JSON",
+        "description": "Metadata embedded in the page as raw JSON.",
+        "template": "challenges/embedded-json.html"
+    },
+    "json-ld": {
+        "number": 7,
+        "title": "JSON-LD",
+        "description": "Structured data exposed via JSON-LD script tags.",
+        "template": "challenges/json-ld.html"
     }
 }
