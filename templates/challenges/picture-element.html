@@ -1,0 +1,11 @@
+<section class="experiment">
+    <h2>Challenge 3</h2>
+    <h3>Picture Element</h3>
+    <p>Adaptive delivery using the <code>&lt;picture&gt;</code> element.</p>
+
+    <picture>
+        <source media="(max-width: 600px)" srcset="{{ url_for('static', filename='images/look1.jpg') }}">
+        <source media="(min-width: 601px)" srcset="{{ url_for('static', filename='images/look2.jpg') }}">
+        <img src="{{ url_for('static', filename='images/look3.jpg') }}" alt="Picture product">
+    </picture>
+</section>
