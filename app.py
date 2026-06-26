@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, render_template, url_for
+from flask import Flask, jsonify, render_template, request, url_for
 import os
 
 from data.challenges import CHALLENGES
@@ -25,6 +25,28 @@ def api_product():
             ]
         }
     })
+
+@app.route("/graphql", methods=["POST"])
+def graphql():
+    body = request.get_json(silent=True) or {}
+    query = body.get('query', '')
+
+    if 'product' in query:
+        return jsonify({
+            'data': {
+                'product': {
+                    'title': 'Research Jacket',
+                    'description': 'A product loaded from a GraphQL endpoint for scraping experiments.',
+                    'images': [
+                        url_for('static', filename='images/look1.jpg'),
+                        url_for('static', filename='images/look2.jpg'),
+                        url_for('static', filename='images/look3.jpg')
+                    ]
+                }
+            }
+        })
+
+    return jsonify({ 'errors': [{ 'message': 'Unsupported query' }] }), 400
 
 @app.route("/challenge/<challenge_id>")
 def challenge(challenge_id):

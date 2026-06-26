@@ -64,5 +64,17 @@ CHALLENGES = {
         "title": "REST API",
         "description": "Data fetched from a REST endpoint and rendered on the page.",
         "template": "challenges/rest-api.html"
+    },
+    "graphql": {
+        "number": 12,
+        "title": "GraphQL",
+        "description": "Data fetched from a GraphQL endpoint using a POST query.",
+        "template": "challenges/graphql.html"
+    },
+    "fetch-interception": {
+        "number": 13,
+        "title": "Fetch Interception",
+        "description": "Client-side code intercepts fetch requests and returns alternate data.",
+        "template": "challenges/fetch-interception.html"
     }
 }

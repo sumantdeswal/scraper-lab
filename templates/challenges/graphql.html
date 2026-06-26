@@ -1,0 +1,28 @@
+<section class="experiment">
+    <h2>Challenge 12</h2>
+    <h3>GraphQL</h3>
+    <p>Data is loaded via a GraphQL endpoint using a POST request.</p>
+
+    <button id="fetch-graphql" type="button">Fetch GraphQL Product</button>
+    <pre id="graphql-output"></pre>
+
+    <script>
+        document.getElementById('fetch-graphql').addEventListener('click', async function () {
+            const query = `query ProductQuery { product { title description images } }`;
+            const response = await fetch('/graphql', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ query })
+            });
+
+            const payload = await response.json();
+            const product = payload.data?.product || {};
+            const output = {
+                title: product.title,
+                description: product.description,
+                images: product.images
+            };
+            document.getElementById('graphql-output').textContent = JSON.stringify(output, null, 2);
+        });
+    </script>
+</section>
