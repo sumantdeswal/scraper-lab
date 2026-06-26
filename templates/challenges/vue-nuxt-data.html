@@ -1,0 +1,50 @@
+<section class="experiment">
+    <h2>Challenge 10</h2>
+    <h3>Vue / Nuxt Data</h3>
+    <p>Nuxt apps expose page data through the global <code>window.__NUXT__</code> object.</p>
+
+    <div class="product-card">
+        <h4>Nuxt Page Payload</h4>
+        <p>This page is rendered with a serialized Nuxt payload.</p>
+    </div>
+
+    <button id="show-nuxt-data" type="button">Show Parsed Nuxt Data</button>
+    <pre id="nuxt-data-output"></pre>
+
+    <script>
+        window.__NUXT__ = {
+            data: [
+                {
+                    product: {
+                        name: "Research Jacket",
+                        description: "Product data serialized by Nuxt for client-side hydration.",
+                        images: [
+                            "{{ url_for('static', filename='images/look1.jpg') }}",
+                            "{{ url_for('static', filename='images/look2.jpg') }}",
+                            "{{ url_for('static', filename='images/look3.jpg') }}"
+                        ]
+                    }
+                }
+            ],
+            state: {},
+            route: {
+                path: "/product"
+            }
+        };
+    </script>
+
+    <script>
+        document.getElementById('show-nuxt-data').addEventListener('click', function () {
+            const nuxtData = window.__NUXT__ || {};
+            const product = nuxtData.data?.[0]?.product || {};
+            const output = {
+                route: nuxtData.route?.path,
+                productName: product.name,
+                description: product.description,
+                imageCount: Array.isArray(product.images) ? product.images.length : 0,
+                images: product.images
+            };
+            document.getElementById('nuxt-data-output').textContent = JSON.stringify(output, null, 2);
+        });
+    </script>
+</section>

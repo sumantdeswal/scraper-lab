@@ -1,4 +1,4 @@
-from flask import Flask, render_template
+from flask import Flask, jsonify, render_template, url_for
 import os
 
 from data.challenges import CHALLENGES
@@ -11,6 +11,20 @@ def home():
         "home.html",
         challenges=CHALLENGES
     )
+
+@app.route("/api/product")
+def api_product():
+    return jsonify({
+        "product": {
+            "title": "Research Jacket",
+            "description": "A product loaded from a REST API endpoint for scraping experiments.",
+            "images": [
+                url_for('static', filename='images/look1.jpg'),
+                url_for('static', filename='images/look2.jpg'),
+                url_for('static', filename='images/look3.jpg')
+            ]
+        }
+    })
 
 @app.route("/challenge/<challenge_id>")
 def challenge(challenge_id):

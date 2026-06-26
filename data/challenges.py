@@ -52,5 +52,17 @@ CHALLENGES = {
         "title": "React / Next.js Data (__NEXT_DATA__)",
         "description": "Next.js page props serialized into a global __NEXT_DATA__ variable.",
         "template": "challenges/next-data.html"
+    },
+    "vue-nuxt-data": {
+        "number": 10,
+        "title": "Vue / Nuxt Data",
+        "description": "Nuxt page props serialized into a global __NUXT__ variable.",
+        "template": "challenges/vue-nuxt-data.html"
+    },
+    "rest-api": {
+        "number": 11,
+        "title": "REST API",
+        "description": "Data fetched from a REST endpoint and rendered on the page.",
+        "template": "challenges/rest-api.html"
     }
 }

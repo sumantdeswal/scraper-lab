@@ -1,0 +1,26 @@
+<section class="experiment">
+    <h2>Challenge 11</h2>
+    <h3>REST API</h3>
+    <p>Data is loaded from a REST endpoint and rendered into the page.</p>
+
+    <div class="product-card">
+        <h4>API-loaded Product</h4>
+        <p>Click the button to fetch product metadata from a JSON endpoint.</p>
+    </div>
+
+    <button id="fetch-api" type="button">Fetch Product Data</button>
+    <pre id="rest-api-output"></pre>
+
+    <script>
+        document.getElementById('fetch-api').addEventListener('click', async function () {
+            const response = await fetch('{{ url_for('api_product') }}');
+            const data = await response.json();
+            const output = {
+                title: data.product.title,
+                description: data.product.description,
+                images: data.product.images
+            };
+            document.getElementById('rest-api-output').textContent = JSON.stringify(output, null, 2);
+        });
+    </script>
+</section>
