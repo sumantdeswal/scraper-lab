@@ -5,8 +5,15 @@
 
     <button id="fetch-graphql" type="button">Fetch GraphQL Product</button>
     <pre id="graphql-output"></pre>
+    <div class="image-gallery" id="graphql-gallery"></div>
 
     <script>
+        function renderImages(urls, container) {
+            container.innerHTML = urls.map(function (src) {
+                return '<img src="' + src + '" alt="Product image">';
+            }).join('');
+        }
+
         document.getElementById('fetch-graphql').addEventListener('click', async function () {
             const query = `query ProductQuery { product { title description images } }`;
             const response = await fetch('/graphql', {
@@ -23,6 +30,7 @@
                 images: product.images
             };
             document.getElementById('graphql-output').textContent = JSON.stringify(output, null, 2);
+            renderImages(product.images, document.getElementById('graphql-gallery'));
         });
     </script>
 </section>

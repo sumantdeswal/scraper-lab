@@ -10,6 +10,7 @@
 
     <button id="show-global-js" type="button">Show Parsed Global Data</button>
     <pre id="global-js-output"></pre>
+    <div class="image-gallery" id="global-js-gallery"></div>
 
     <script>
         window.productData = {
@@ -21,9 +22,13 @@
                 "{{ url_for('static', filename='images/look3.jpg') }}"
             ]
         };
-    </script>
 
-    <script>
+        function renderImages(urls, container) {
+            container.innerHTML = urls.map(function (src) {
+                return '<img src="' + src + '" alt="Product image">';
+            }).join('');
+        }
+
         document.getElementById('show-global-js').addEventListener('click', function () {
             const data = window.productData || {};
             const output = {
@@ -33,6 +38,7 @@
                 images: data.images
             };
             document.getElementById('global-js-output').textContent = JSON.stringify(output, null, 2);
+            renderImages(data.images, document.getElementById('global-js-gallery'));
         });
     </script>
 </section>

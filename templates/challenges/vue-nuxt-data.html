@@ -10,6 +10,7 @@
 
     <button id="show-nuxt-data" type="button">Show Parsed Nuxt Data</button>
     <pre id="nuxt-data-output"></pre>
+    <div class="image-gallery" id="nuxt-data-gallery"></div>
 
     <script>
         window.__NUXT__ = {
@@ -31,9 +32,13 @@
                 path: "/product"
             }
         };
-    </script>
 
-    <script>
+        function renderImages(urls, container) {
+            container.innerHTML = urls.map(function (src) {
+                return '<img src="' + src + '" alt="Product image">';
+            }).join('');
+        }
+
         document.getElementById('show-nuxt-data').addEventListener('click', function () {
             const nuxtData = window.__NUXT__ || {};
             const product = nuxtData.data?.[0]?.product || {};
@@ -45,6 +50,7 @@
                 images: product.images
             };
             document.getElementById('nuxt-data-output').textContent = JSON.stringify(output, null, 2);
+            renderImages(product.images, document.getElementById('nuxt-data-gallery'));
         });
     </script>
 </section>

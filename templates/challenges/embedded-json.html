@@ -10,6 +10,7 @@
 
     <button id="show-json-data" type="button">Show Parsed Data</button>
     <pre id="embedded-json-output"></pre>
+    <div class="image-gallery" id="embedded-json-gallery"></div>
 
     <script type="application/json" id="product-data">
         {
@@ -26,6 +27,12 @@
     </script>
 
     <script>
+        function renderImages(urls, container) {
+            container.innerHTML = urls.map(function (src) {
+                return '<img src="' + src + '" alt="Product image">';
+            }).join('');
+        }
+
         document.getElementById('show-json-data').addEventListener('click', function () {
             const raw = document.getElementById('product-data').textContent;
             const payload = JSON.parse(raw);
@@ -36,6 +43,7 @@
                 images: payload.product.images
             };
             document.getElementById('embedded-json-output').textContent = JSON.stringify(output, null, 2);
+            renderImages(payload.product.images, document.getElementById('embedded-json-gallery'));
         });
     </script>
 </section>

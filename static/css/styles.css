@@ -145,3 +145,23 @@ body {
         align-items: flex-start;
     }
 }
+
+.image-gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.image-gallery img {
+    width: 100%;
+    height: auto;
+    display: block;
+    border-radius: 1rem;
+    box-shadow: 0 12px 28px rgba(15, 23, 42, 0.12);
+    object-fit: cover;
+}
+
+.image-gallery + pre {
+    margin-top: 1rem;
+}

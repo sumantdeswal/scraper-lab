@@ -10,6 +10,7 @@
 
     <button id="show-jsonld-data" type="button">Show Parsed JSON-LD</button>
     <pre id="jsonld-output"></pre>
+    <div class="image-gallery" id="jsonld-gallery"></div>
 
     <script type="application/ld+json">
         {
@@ -33,6 +34,12 @@
     </script>
 
     <script>
+        function renderImages(urls, container) {
+            container.innerHTML = urls.map(function (src) {
+                return '<img src="' + src + '" alt="Product image">';
+            }).join('');
+        }
+
         document.getElementById('show-jsonld-data').addEventListener('click', function () {
             const raw = document.querySelector('script[type="application/ld+json"]').textContent;
             const data = JSON.parse(raw);
@@ -44,6 +51,7 @@
                 price: data.offers.price
             };
             document.getElementById('jsonld-output').textContent = JSON.stringify(output, null, 2);
+            renderImages(data.image, document.getElementById('jsonld-gallery'));
         });
     </script>
 </section>

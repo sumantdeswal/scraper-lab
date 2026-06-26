@@ -10,6 +10,7 @@
 
     <button id="show-next-data" type="button">Show Parsed __NEXT_DATA__</button>
     <pre id="next-data-output"></pre>
+    <div class="image-gallery" id="next-data-gallery"></div>
 
     <script>
         window.__NEXT_DATA__ = {
@@ -30,9 +31,13 @@
             "query": {},
             "buildId": "development"
         };
-    </script>
 
-    <script>
+        function renderImages(urls, container) {
+            container.innerHTML = urls.map(function (src) {
+                return '<img src="' + src + '" alt="Product image">';
+            }).join('');
+        }
+
         document.getElementById('show-next-data').addEventListener('click', function () {
             const nextData = window.__NEXT_DATA__ || {};
             const product = nextData.props?.pageProps?.product || {};
@@ -43,6 +48,7 @@
                 images: product.images
             };
             document.getElementById('next-data-output').textContent = JSON.stringify(output, null, 2);
+            renderImages(product.images, document.getElementById('next-data-gallery'));
         });
     </script>
 </section>

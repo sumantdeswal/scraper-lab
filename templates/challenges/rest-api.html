@@ -10,8 +10,15 @@
 
     <button id="fetch-api" type="button">Fetch Product Data</button>
     <pre id="rest-api-output"></pre>
+    <div class="image-gallery" id="rest-api-gallery"></div>
 
     <script>
+        function renderImages(urls, container) {
+            container.innerHTML = urls.map(function (src) {
+                return '<img src="' + src + '" alt="Product image">';
+            }).join('');
+        }
+
         document.getElementById('fetch-api').addEventListener('click', async function () {
             const response = await fetch('{{ url_for('api_product') }}');
             const data = await response.json();
@@ -21,6 +28,7 @@
                 images: data.product.images
             };
             document.getElementById('rest-api-output').textContent = JSON.stringify(output, null, 2);
+            renderImages(data.product.images, document.getElementById('rest-api-gallery'));
         });
     </script>
 </section>
