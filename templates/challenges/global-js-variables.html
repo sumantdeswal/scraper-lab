@@ -1,0 +1,38 @@
+<section class="experiment">
+    <h2>Challenge 8</h2>
+    <h3>Global JavaScript Variables</h3>
+    <p>Data is exposed via a global JavaScript variable instead of inline HTML.</p>
+
+    <div class="product-card">
+        <h4>Global Product State</h4>
+        <p>This page stores product metadata on <code>window.productData</code>.</p>
+    </div>
+
+    <button id="show-global-js" type="button">Show Parsed Global Data</button>
+    <pre id="global-js-output"></pre>
+
+    <script>
+        window.productData = {
+            title: "Research Jacket",
+            description: "A product object attached to the global window object.",
+            images: [
+                "{{ url_for('static', filename='images/look1.jpg') }}",
+                "{{ url_for('static', filename='images/look2.jpg') }}",
+                "{{ url_for('static', filename='images/look3.jpg') }}"
+            ]
+        };
+    </script>
+
+    <script>
+        document.getElementById('show-global-js').addEventListener('click', function () {
+            const data = window.productData || {};
+            const output = {
+                title: data.title,
+                description: data.description,
+                imageCount: Array.isArray(data.images) ? data.images.length : 0,
+                images: data.images
+            };
+            document.getElementById('global-js-output').textContent = JSON.stringify(output, null, 2);
+        });
+    </script>
+</section>

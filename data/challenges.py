@@ -40,5 +40,17 @@ CHALLENGES = {
         "title": "JSON-LD",
         "description": "Structured data exposed via JSON-LD script tags.",
         "template": "challenges/json-ld.html"
+    },
+    "global-js-variables": {
+        "number": 8,
+        "title": "Global JavaScript Variables",
+        "description": "Data exposed through a global JavaScript variable.",
+        "template": "challenges/global-js-variables.html"
+    },
+    "next-data": {
+        "number": 9,
+        "title": "React / Next.js Data (__NEXT_DATA__)",
+        "description": "Next.js page props serialized into a global __NEXT_DATA__ variable.",
+        "template": "challenges/next-data.html"
     }
 }

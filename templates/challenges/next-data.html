@@ -1,0 +1,48 @@
+<section class="experiment">
+    <h2>Challenge 9</h2>
+    <h3>React / Next.js Data (`__NEXT_DATA__`)</h3>
+    <p>Next.js applications serialize page props into a global <code>__NEXT_DATA__</code> variable.</p>
+
+    <div class="product-card">
+        <h4>Next.js Serialized Props</h4>
+        <p>This page includes the Next.js payload used to hydrate client-side components.</p>
+    </div>
+
+    <button id="show-next-data" type="button">Show Parsed __NEXT_DATA__</button>
+    <pre id="next-data-output"></pre>
+
+    <script>
+        window.__NEXT_DATA__ = {
+            "props": {
+                "pageProps": {
+                    "product": {
+                        "name": "Research Jacket",
+                        "description": "Example product data from a Next.js page.",
+                        "images": [
+                            "{{ url_for('static', filename='images/look1.jpg') }}",
+                            "{{ url_for('static', filename='images/look2.jpg') }}",
+                            "{{ url_for('static', filename='images/look3.jpg') }}"
+                        ]
+                    }
+                }
+            },
+            "page": "/product",
+            "query": {},
+            "buildId": "development"
+        };
+    </script>
+
+    <script>
+        document.getElementById('show-next-data').addEventListener('click', function () {
+            const nextData = window.__NEXT_DATA__ || {};
+            const product = nextData.props?.pageProps?.product || {};
+            const output = {
+                page: nextData.page,
+                productName: product.name,
+                description: product.description,
+                images: product.images
+            };
+            document.getElementById('next-data-output').textContent = JSON.stringify(output, null, 2);
+        });
+    </script>
+</section>
