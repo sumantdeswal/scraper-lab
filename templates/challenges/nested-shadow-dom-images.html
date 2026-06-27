@@ -1,0 +1,35 @@
+<section class="experiment">
+    <h2>Challenge 19</h2>
+    <h3>Nested Shadow DOM Images</h3>
+    <p>Images are nested inside multiple shadow roots.</p>
+
+    <div id="nested-shadow-host"></div>
+
+    <script>
+        const host = document.getElementById('nested-shadow-host');
+        const outer = host.attachShadow({ mode: 'open' });
+        outer.innerHTML = `
+            <style>
+                .outer-gallery { padding: 1rem; border: 1px solid #d3dce6; border-radius: 1rem; }
+                .inner-host { display: block; }
+            </style>
+            <div class="outer-gallery">
+                <div class="inner-host" id="inner-host"></div>
+            </div>
+        `;
+
+        const innerHost = outer.querySelector('#inner-host');
+        const inner = innerHost.attachShadow({ mode: 'open' });
+        inner.innerHTML = `
+            <style>
+                .shadow-gallery { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; }
+                .shadow-gallery img { width: 100%; border-radius: 1rem; }
+            </style>
+            <div class="shadow-gallery">
+                <img src="{{ url_for('static', filename='images/look1.jpg') }}" alt="Nested shadow image 1">
+                <img src="{{ url_for('static', filename='images/look2.jpg') }}" alt="Nested shadow image 2">
+                <img src="{{ url_for('static', filename='images/look3.jpg') }}" alt="Nested shadow image 3">
+            </div>
+        `;
+    </script>
+</section>

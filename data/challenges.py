@@ -76,5 +76,41 @@ CHALLENGES = {
         "title": "Fetch Interception",
         "description": "Client-side code intercepts fetch requests and returns alternate data.",
         "template": "challenges/fetch-interception.html"
+    },
+    "fetch-images": {
+        "number": 14,
+        "title": "Images Loaded via fetch()",
+        "description": "Image URLs fetched from a JSON file and rendered into the page.",
+        "template": "challenges/fetch-images.html"
+    },
+    "xhr-images": {
+        "number": 15,
+        "title": "Images Loaded via XMLHttpRequest",
+        "description": "Image URLs loaded via XMLHttpRequest and rendered into the page.",
+        "template": "challenges/xhr-images.html"
+    },
+    "performance-resource-discovery": {
+        "number": 16,
+        "title": "Performance API Resource Discovery",
+        "description": "Images discovered through the Performance API after loading.",
+        "template": "challenges/performance-resource-discovery.html"
+    },
+    "open-shadow-dom-images": {
+        "number": 17,
+        "title": "Open Shadow DOM Images",
+        "description": "Images injected into an open shadow root.",
+        "template": "challenges/open-shadow-dom-images.html"
+    },
+    "closed-shadow-dom-images": {
+        "number": 18,
+        "title": "Closed Shadow DOM Images",
+        "description": "Images injected into a closed shadow root.",
+        "template": "challenges/closed-shadow-dom-images.html"
+    },
+    "nested-shadow-dom-images": {
+        "number": 19,
+        "title": "Nested Shadow DOM Images",
+        "description": "Images nested inside multiple shadow roots.",
+        "template": "challenges/nested-shadow-dom-images.html"
     }
 }

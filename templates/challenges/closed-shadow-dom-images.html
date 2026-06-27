@@ -1,0 +1,23 @@
+<section class="experiment">
+    <h2>Challenge 18</h2>
+    <h3>Closed Shadow DOM Images</h3>
+    <p>Images are injected into a closed shadow root.</p>
+
+    <div id="closed-shadow-host"></div>
+
+    <script>
+        const host = document.getElementById('closed-shadow-host');
+        const shadow = host.attachShadow({ mode: 'closed' });
+        shadow.innerHTML = `
+            <style>
+                .shadow-gallery { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; }
+                .shadow-gallery img { width: 100%; border-radius: 1rem; }
+            </style>
+            <div class="shadow-gallery">
+                <img src="{{ url_for('static', filename='images/look1.jpg') }}" alt="Closed shadow image 1">
+                <img src="{{ url_for('static', filename='images/look2.jpg') }}" alt="Closed shadow image 2">
+                <img src="{{ url_for('static', filename='images/look3.jpg') }}" alt="Closed shadow image 3">
+            </div>
+        `;
+    </script>
+</section>
