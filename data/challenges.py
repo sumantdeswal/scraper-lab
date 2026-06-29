@@ -44,7 +44,13 @@ CHALLENGES = {
     "dynamic-galleries": {
         "number": 8,
         "title": "Dynamic Galleries",
-        "description": "Gallery content changes while browsing through load more, infinite scroll, and carousel interactions.",
+        "description": "Gallery content changes while browsing through load more, carousel interactions etc.",
         "template": "challenges/dynamic-galleries.html"
+    },
+    "canvas-object-based-media": {
+        "number": 9,
+        "title": "Canvas & Object-Based Media",
+        "description": "Media rendered through canvas drawing, blob URLs, object URLs, and Base64 data images.",
+        "template": "challenges/canvas-object-based-media.html"
     }
 }

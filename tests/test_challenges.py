@@ -37,8 +37,27 @@ class ChallengeRegistryTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         body = response.get_data(as_text=True)
         self.assertIn("Load More", body)
-        self.assertIn("Infinite Scroll", body)
+        self.assertNotIn("Infinite Scroll", body)
         self.assertIn("Carousel", body)
+
+    def test_canvas_object_based_media_challenge_is_registered(self):
+        self.assertIn("canvas-object-based-media", CHALLENGES)
+        challenge = CHALLENGES["canvas-object-based-media"]
+        self.assertEqual(challenge["title"], "Canvas & Object-Based Media")
+        self.assertEqual(challenge["template"], "challenges/canvas-object-based-media.html")
+
+    def test_canvas_object_based_media_page_renders_expected_content(self):
+        app.testing = True
+        client = app.test_client()
+
+        response = client.get("/challenge/canvas-object-based-media")
+
+        self.assertEqual(response.status_code, 200)
+        body = response.get_data(as_text=True)
+        self.assertIn("Canvas", body)
+        self.assertIn("blob", body)
+        self.assertIn("object URL", body)
+        self.assertIn("Base64", body)
 
 
 if __name__ == "__main__":

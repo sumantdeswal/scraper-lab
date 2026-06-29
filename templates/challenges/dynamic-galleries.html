@@ -1,7 +1,7 @@
 <section class="experiment">
     <h2>Challenge 8</h2>
     <h3>Dynamic Galleries</h3>
-    <p>Gallery content changes while browsing through progressive loading, infinite scrolling, and carousel interactions.</p>
+    <p>Gallery content changes while browsing through progressive loading and carousel interactions.</p>
 
     <div class="gallery-stack">
         <div class="gallery-card">
@@ -12,13 +12,7 @@
             </div>
         </div>
 
-        <div class="gallery-card">
-            <span class="status-pill">Infinite Scroll</span>
-            <div id="infinite-gallery" class="gallery-grid"></div>
-            <div id="infinite-sentinel" class="infinite-sentinel"></div>
-        </div>
-
-        <div class="gallery-card">
+            <div class="gallery-card">
             <span class="status-pill">Carousel</span>
             <div class="carousel-shell">
                 <div class="carousel-frame">
@@ -81,27 +75,6 @@
 
         loadMoreButton.addEventListener('click', loadMoreImages);
         loadMoreImages();
-
-        let infiniteIndex = 0;
-        const infiniteRoot = document.getElementById('infinite-gallery');
-        const sentinel = document.getElementById('infinite-sentinel');
-
-        function loadInfiniteImages() {
-            const batchSize = 3;
-            if (infiniteIndex >= galleryImages.length) {
-                return;
-            }
-            renderBatch('infinite-gallery', infiniteIndex, batchSize);
-            infiniteIndex += batchSize;
-        }
-
-        const observer = new IntersectionObserver(function (entries) {
-            if (entries[0].isIntersecting) {
-                loadInfiniteImages();
-            }
-        }, { rootMargin: '200px' });
-        observer.observe(sentinel);
-        loadInfiniteImages();
 
         const carouselImage = document.getElementById('carousel-image');
         const carouselCaption = document.getElementById('carousel-caption');

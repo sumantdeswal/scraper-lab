@@ -1,0 +1,110 @@
+<section class="experiment">
+    <h2>Challenge 9</h2>
+    <h3>Canvas & Object-Based Media</h3>
+    <p>These examples render media without standard &lt;img&gt; tags and rely on Canvas, blob URLs, object URLs, and Base64 data images.</p>
+
+    <div class="experiment-controls">
+        <button id="render-canvas" type="button">Render Canvas</button>
+        <button id="load-blob-url" type="button">Load Blob URL</button>
+        <button id="load-base64" type="button">Load Base64 Image</button>
+    </div>
+
+    <div class="dynamic-demo-grid">
+        <section>
+            <span class="status-pill">Canvas</span>
+            <canvas id="canvas-demo" width="240" height="140"></canvas>
+            <p id="canvas-status">Canvas not rendered yet.</p>
+        </section>
+        <section>
+            <span class="status-pill">blob URL</span>
+            <div id="blob-preview"></div>
+            <p id="blob-status">No blob URL created yet.</p>
+        </section>
+        <section>
+            <span class="status-pill">object URL</span>
+            <div id="object-preview"></div>
+            <p id="object-status">No object URL created yet.</p>
+        </section>
+        <section>
+            <span class="status-pill">Base64</span>
+            <div id="base64-preview"></div>
+            <p id="base64-status">No Base64 image loaded yet.</p>
+        </section>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('canvas-demo');
+        const context = canvas.getContext('2d');
+        const canvasStatus = document.getElementById('canvas-status');
+        const blobStatus = document.getElementById('blob-status');
+        const objectStatus = document.getElementById('object-status');
+        const base64Status = document.getElementById('base64-status');
+        const blobPreview = document.getElementById('blob-preview');
+        const objectPreview = document.getElementById('object-preview');
+        const base64Preview = document.getElementById('base64-preview');
+
+        function paintCanvas() {
+            context.clearRect(0, 0, canvas.width, canvas.height);
+            context.fillStyle = '#1f4d8f';
+            context.fillRect(0, 0, canvas.width, canvas.height);
+            context.fillStyle = 'white';
+            context.font = 'bold 24px sans-serif';
+            context.fillText('Canvas', 40, 70);
+            context.font = '16px sans-serif';
+            context.fillText('Object-based media', 40, 100);
+            canvasStatus.textContent = 'Canvas rendered with drawing commands.';
+        }
+
+        function createBlobImage() {
+            canvas.toBlob(function (blob) {
+                if (!blob) {
+                    return;
+                }
+
+                const url = URL.createObjectURL(blob);
+                const image = document.createElement('img');
+                image.src = url;
+                image.alt = 'blob URL preview';
+                image.style.maxWidth = '100%';
+                image.style.maxHeight = '120px';
+                blobPreview.innerHTML = '';
+                blobPreview.appendChild(image);
+                blobStatus.textContent = 'blob URL created and attached.';
+            }, 'image/png');
+        }
+
+        function createObjectImage() {
+            const svg = '<svg xmlns="http://www.w3.org/2000/svg" width="200" height="120"><rect width="200" height="120" fill="#9b2c2c"/><circle cx="100" cy="60" r="40" fill="#f6e05e"/><text x="100" y="70" text-anchor="middle" font-size="24" fill="white" font-family="sans-serif">Object</text></svg>';
+            const imageBlob = new Blob([svg], { type: 'image/svg+xml;charset=utf-8' });
+            const url = URL.createObjectURL(imageBlob);
+            const image = document.createElement('img');
+            image.src = url;
+            image.alt = 'object URL preview';
+            image.style.maxWidth = '100%';
+            image.style.maxHeight = '120px';
+            objectPreview.innerHTML = '';
+            objectPreview.appendChild(image);
+            objectStatus.textContent = 'object URL generated from a Blob.';
+        }
+
+        function loadBase64Image() {
+            const dataUrl = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAACklEQVR4nGMAAIAAeIhvAAAAAElFTkSuQmCC';
+            const image = document.createElement('img');
+            image.src = dataUrl;
+            image.alt = 'Base64 image preview';
+            image.style.maxWidth = '100%';
+            image.style.maxHeight = '120px';
+            base64Preview.innerHTML = '';
+            base64Preview.appendChild(image);
+            base64Status.textContent = 'Base64 data image loaded.';
+        }
+
+        document.getElementById('render-canvas').addEventListener('click', paintCanvas);
+        document.getElementById('load-blob-url').addEventListener('click', createBlobImage);
+        document.getElementById('load-base64').addEventListener('click', loadBase64Image);
+
+        paintCanvas();
+        createObjectImage();
+        loadBase64Image();
+    </script>
+</section>
