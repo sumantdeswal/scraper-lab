@@ -38,7 +38,7 @@ CHALLENGES = {
     "dynamic-dom-generation": {
         "number": 7,
         "title": "Dynamic DOM Generation",
-        "description": "Images created at runtime through timers, click interactions, and MutationObserver-driven updates.",
+        "description": "Images created at click interactions and other user-driven events.",
         "template": "challenges/dynamic-dom-generation.html"
     }
 }
