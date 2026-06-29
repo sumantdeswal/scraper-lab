@@ -1,0 +1,20 @@
+<section class="experiment">
+    <h2>Challenge 10</h2>
+    <h3>Protected Media</h3>
+    <p>This gallery looks like a normal storefront, but each image is behind a different protection mechanism.</p>
+
+    <div class="gallery-stack">
+        {% for item in protected_media %}
+        <article class="gallery-card">
+            <h4>{{ item.title }}</h4>
+            <p>{{ item.description }}</p>
+            <div class="gallery-grid">
+                <img src="{{ item.image_url }}" alt="{{ item.title }} preview" loading="lazy">
+            </div>
+        </article>
+        {% endfor %}
+    </div>
+
+    <pre><code>// The backend signs URLs, checks cookies, validates bearer tokens, and requires a valid session.
+// Each mechanism is explained in the comments in the server-side helper module.</code></pre>
+</section>

@@ -68,6 +68,32 @@ class ChallengeRegistryTests(unittest.TestCase):
         body = response.get_data(as_text=True)
         self.assertNotIn("createBlobImage();", body)
 
+    def test_protected_media_challenge_is_registered(self):
+        self.assertIn("protected-media", CHALLENGES)
+        challenge = CHALLENGES["protected-media"]
+        self.assertEqual(challenge["title"], "Protected Media")
+        self.assertEqual(challenge["template"], "challenges/protected-media.html")
+
+    def test_protected_media_page_renders_expected_content(self):
+        app.testing = True
+        client = app.test_client()
+
+        response = client.get("/challenge/protected-media")
+
+        self.assertEqual(response.status_code, 200)
+        body = response.get_data(as_text=True)
+        self.assertIn("Protected Media", body)
+        self.assertIn("Signed URL", body)
+        self.assertIn("Authorization", body)
+
+    def test_signed_media_route_rejects_bad_signature(self):
+        app.testing = True
+        client = app.test_client()
+
+        response = client.get("/protected-media/signed/demo-1?token=bad&expires=1")
+
+        self.assertEqual(response.status_code, 403)
+
 
 if __name__ == "__main__":
     unittest.main()

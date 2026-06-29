@@ -52,5 +52,11 @@ CHALLENGES = {
         "title": "Canvas & Object-Based Media",
         "description": "Media rendered through blob URLs",
         "template": "challenges/canvas-object-based-media.html"
+    },
+    "protected-media": {
+        "number": 10,
+        "title": "Protected Media",
+        "description": "A realistic gallery that uses signed URLs, expiring links, cookies, authorization headers, and session checks.",
+        "template": "challenges/protected-media.html"
     }
 }
