@@ -50,7 +50,7 @@ CHALLENGES = {
     "canvas-object-based-media": {
         "number": 9,
         "title": "Canvas & Object-Based Media",
-        "description": "Media rendered through canvas drawing, blob URLs, object URLs, and Base64 data images.",
+        "description": "Media rendered through blob URLs",
         "template": "challenges/canvas-object-based-media.html"
     }
 }

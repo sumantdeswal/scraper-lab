@@ -54,10 +54,19 @@ class ChallengeRegistryTests(unittest.TestCase):
 
         self.assertEqual(response.status_code, 200)
         body = response.get_data(as_text=True)
-        self.assertIn("Canvas", body)
-        self.assertIn("blob", body)
-        self.assertIn("object URL", body)
-        self.assertIn("Base64", body)
+        self.assertIn("Blob URL", body)
+        self.assertIn("blob URL", body)
+        self.assertIn("No blob URL created yet.", body)
+
+    def test_canvas_object_based_media_does_not_preload_blob_image(self):
+        app.testing = True
+        client = app.test_client()
+
+        response = client.get("/challenge/canvas-object-based-media")
+
+        self.assertEqual(response.status_code, 200)
+        body = response.get_data(as_text=True)
+        self.assertNotIn("createBlobImage();", body)
 
 
 if __name__ == "__main__":
