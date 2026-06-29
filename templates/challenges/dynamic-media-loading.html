@@ -1,0 +1,28 @@
+<section class="experiment">
+    <h2>Challenge 3</h2>
+    <h3>Dynamic Media Loading</h3>
+    <p>Images appear only after interaction, demonstrating lazy-loading behavior.</p>
+
+    <button id="load-images" type="button">Load Images</button>
+
+    <div class="gallery">
+        <img data-src="{{ url_for('static', filename='images/look1.jpg') }}" alt="Lazy image 1">
+        <img data-src="{{ url_for('static', filename='images/look2.jpg') }}" alt="Lazy image 2">
+        <img data-src="{{ url_for('static', filename='images/look3.jpg') }}" alt="Lazy image 3">
+        <img data-src="{{ url_for('static', filename='images/look1.jpg') }}" alt="Lazy image 4">
+        <img data-src="{{ url_for('static', filename='images/look2.jpg') }}" alt="Lazy image 5">
+        <img data-src="{{ url_for('static', filename='images/look3.jpg') }}" alt="Lazy image 6">
+    </div>
+
+    <script>
+        document.getElementById('load-images').addEventListener('click', function () {
+            document.querySelectorAll('.gallery img').forEach(function (img) {
+                if (!img.src) {
+                    img.src = img.dataset.src;
+                }
+            });
+            this.disabled = true;
+            this.textContent = 'Images Loaded';
+        });
+    </script>
+</section>

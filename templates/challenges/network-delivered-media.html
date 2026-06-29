@@ -1,0 +1,84 @@
+<section class="experiment">
+    <h2>Challenge 5</h2>
+    <h3>Network-Delivered Media</h3>
+    <p>This combines REST, GraphQL, fetch(), and XHR-style delivery of product media.</p>
+
+    <button id="fetch-rest" type="button">Fetch REST Product</button>
+    <button id="fetch-graphql" type="button">Fetch GraphQL Product</button>
+    <button id="load-fetch-images" type="button">Load via fetch()</button>
+    <button id="load-xhr-images" type="button">Load via XHR</button>
+
+    <pre id="network-output"></pre>
+    <div class="image-gallery" id="network-gallery"></div>
+
+    <script>
+        function renderImages(urls, container) {
+            container.innerHTML = urls.map(function (src) {
+                return '<img src="' + src + '" alt="Product image">';
+            }).join('');
+        }
+
+        async function fetchRestProduct() {
+            const response = await fetch('{{ url_for('api_product') }}');
+            const data = await response.json();
+            const output = {
+                source: 'REST',
+                title: data.product.title,
+                description: data.product.description,
+                images: data.product.images
+            };
+            document.getElementById('network-output').textContent = JSON.stringify(output, null, 2);
+            renderImages(data.product.images, document.getElementById('network-gallery'));
+        }
+
+        document.getElementById('fetch-rest').addEventListener('click', fetchRestProduct);
+
+        document.getElementById('fetch-graphql').addEventListener('click', async function () {
+            const query = `query ProductQuery { product { title description images } }`;
+            const response = await fetch('/graphql', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ query })
+            });
+
+            const payload = await response.json();
+            const product = payload.data?.product || {};
+            const output = {
+                source: 'GraphQL',
+                title: product.title,
+                description: product.description,
+                images: product.images
+            };
+            document.getElementById('network-output').textContent = JSON.stringify(output, null, 2);
+            renderImages(product.images, document.getElementById('network-gallery'));
+        });
+
+        document.getElementById('load-fetch-images').addEventListener('click', async function () {
+            const response = await fetch('/static/data/images.json');
+            const data = await response.json();
+            const output = {
+                source: 'fetch()',
+                images: data.images
+            };
+            document.getElementById('network-output').textContent = JSON.stringify(output, null, 2);
+            renderImages(data.images, document.getElementById('network-gallery'));
+        });
+
+        document.getElementById('load-xhr-images').addEventListener('click', function () {
+            const request = new XMLHttpRequest();
+            request.open('GET', '/static/data/images.json');
+            request.onload = function () {
+                if (request.status >= 200 && request.status < 300) {
+                    const data = JSON.parse(request.responseText);
+                    const output = {
+                        source: 'XMLHttpRequest',
+                        images: data.images
+                    };
+                    document.getElementById('network-output').textContent = JSON.stringify(output, null, 2);
+                    renderImages(data.images, document.getElementById('network-gallery'));
+                }
+            };
+            request.send();
+        });
+    </script>
+</section>

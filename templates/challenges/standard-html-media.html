@@ -1,0 +1,40 @@
+<section class="experiment">
+    <h2>Challenge 1</h2>
+    <h3>Standard HTML Media</h3>
+    <p>This combines standard HTML images, responsive <code>srcset</code> usage, and the <code>&lt;picture&gt;</code> element.</p>
+
+    <div class="product">
+        <h4>Research Product</h4>
+
+        <h5>Plain HTML</h5>
+        <img src="{{ url_for('static', filename='images/look1.jpg') }}" alt="Look 1">
+        <img src="{{ url_for('static', filename='images/look2.jpg') }}" alt="Look 2">
+        <img src="{{ url_for('static', filename='images/look3.jpg') }}" alt="Look 3">
+
+        <h5>Srcset</h5>
+        <img
+            src="{{ url_for('static', filename='images/look1.jpg') }}"
+            srcset="{{ url_for('static', filename='images/look1.jpg') }} 480w, {{ url_for('static', filename='images/look2.jpg') }} 960w, {{ url_for('static', filename='images/look3.jpg') }} 1440w"
+            sizes="(max-width: 600px) 480px, (max-width: 1200px) 960px, 1440px"
+            alt="Responsive research product"
+        >
+
+        <h5>Picture Element</h5>
+        <picture>
+            <source media="(max-width: 600px)" srcset="{{ url_for('static', filename='images/look1.jpg') }}">
+            <source media="(min-width: 601px)" srcset="{{ url_for('static', filename='images/look2.jpg') }}">
+            <img src="{{ url_for('static', filename='images/look3.jpg') }}" alt="Picture product">
+        </picture>
+    </div>
+</section>
+
+<hr>
+
+<section class="goal">
+    <h2>Challenge Goal</h2>
+    <ul>
+        <li>Extract all image URLs</li>
+        <li>Extract title</li>
+        <li>Extract description</li>
+    </ul>
+</section>

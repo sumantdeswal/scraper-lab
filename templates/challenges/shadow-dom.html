@@ -1,0 +1,70 @@
+<section class="experiment">
+    <h2>Challenge 6</h2>
+    <h3>Shadow DOM</h3>
+    <p>Images are embedded inside open, closed, and nested shadow roots.</p>
+
+    <h4>Open Shadow DOM</h4>
+    <div id="open-shadow-host"></div>
+
+    <h4>Closed Shadow DOM</h4>
+    <div id="closed-shadow-host"></div>
+
+    <h4>Nested Shadow DOM</h4>
+    <div id="nested-shadow-host"></div>
+
+    <script>
+        const openHost = document.getElementById('open-shadow-host');
+        const openShadow = openHost.attachShadow({ mode: 'open' });
+        openShadow.innerHTML = `
+            <style>
+                .shadow-gallery { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; }
+                .shadow-gallery img { width: 100%; border-radius: 1rem; }
+            </style>
+            <div class="shadow-gallery">
+                <img src="{{ url_for('static', filename='images/look1.jpg') }}" alt="Shadow image 1">
+                <img src="{{ url_for('static', filename='images/look2.jpg') }}" alt="Shadow image 2">
+                <img src="{{ url_for('static', filename='images/look3.jpg') }}" alt="Shadow image 3">
+            </div>
+        `;
+
+        const closedHost = document.getElementById('closed-shadow-host');
+        const closedShadow = closedHost.attachShadow({ mode: 'closed' });
+        closedShadow.innerHTML = `
+            <style>
+                .shadow-gallery { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; }
+                .shadow-gallery img { width: 100%; border-radius: 1rem; }
+            </style>
+            <div class="shadow-gallery">
+                <img src="{{ url_for('static', filename='images/look1.jpg') }}" alt="Shadow image 1">
+                <img src="{{ url_for('static', filename='images/look2.jpg') }}" alt="Shadow image 2">
+                <img src="{{ url_for('static', filename='images/look3.jpg') }}" alt="Shadow image 3">
+            </div>
+        `;
+
+        const nestedHost = document.getElementById('nested-shadow-host');
+        const outer = nestedHost.attachShadow({ mode: 'open' });
+        outer.innerHTML = `
+            <style>
+                .outer-gallery { padding: 1rem; border: 1px solid #d3dce6; border-radius: 1rem; }
+                .inner-host { display: block; }
+            </style>
+            <div class="outer-gallery">
+                <div class="inner-host" id="inner-host"></div>
+            </div>
+        `;
+
+        const innerHost = outer.querySelector('#inner-host');
+        const inner = innerHost.attachShadow({ mode: 'open' });
+        inner.innerHTML = `
+            <style>
+                .shadow-gallery { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; }
+                .shadow-gallery img { width: 100%; border-radius: 1rem; }
+            </style>
+            <div class="shadow-gallery">
+                <img src="{{ url_for('static', filename='images/look1.jpg') }}" alt="Nested shadow image 1">
+                <img src="{{ url_for('static', filename='images/look2.jpg') }}" alt="Nested shadow image 2">
+                <img src="{{ url_for('static', filename='images/look3.jpg') }}" alt="Nested shadow image 3">
+            </div>
+        `;
+    </script>
+</section>

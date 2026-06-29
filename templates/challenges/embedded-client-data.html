@@ -1,0 +1,90 @@
+<section class="experiment">
+    <h2>Challenge 4</h2>
+    <h3>Embedded Client Data</h3>
+    <p>This page combines embedded JSON, JSON-LD, and global JavaScript variables to expose product data.</p>
+
+    <div class="product-card">
+        <h4>Embedded Product Data</h4>
+        <p>Use the controls below to inspect the hidden payloads.</p>
+    </div>
+
+    <button id="show-json-data" type="button">Show Embedded JSON</button>
+    <button id="show-jsonld-data" type="button">Show JSON-LD</button>
+    <button id="show-global-js" type="button">Show Global JS Data</button>
+
+    <pre id="embedded-client-output"></pre>
+    <div class="image-gallery" id="embedded-client-gallery"></div>
+
+    <script type="application/json" id="product-data">
+        {
+            "product": {
+                "title": "Research Jacket",
+                "description": "A lightweight jacket used to demonstrate embedded JSON delivery.",
+                "images": [
+                    "{{ url_for('static', filename='images/look1.jpg') }}",
+                    "{{ url_for('static', filename='images/look2.jpg') }}",
+                    "{{ url_for('static', filename='images/look3.jpg') }}"
+                ]
+            }
+        }
+    </script>
+
+    <script type="application/ld+json">
+        {
+            "@context": "https://schema.org/",
+            "@type": "Product",
+            "name": "Research Jacket",
+            "description": "A lightweight jacket used to demonstrate JSON-LD delivery.",
+            "image": [
+                "{{ url_for('static', filename='images/look1.jpg') }}",
+                "{{ url_for('static', filename='images/look2.jpg') }}",
+                "{{ url_for('static', filename='images/look3.jpg') }}"
+            ],
+            "sku": "RL-1006"
+        }
+    </script>
+
+    <script>
+        window.productData = {
+            title: "Research Jacket",
+            description: "A product object attached to the global window object.",
+            images: [
+                "{{ url_for('static', filename='images/look1.jpg') }}",
+                "{{ url_for('static', filename='images/look2.jpg') }}",
+                "{{ url_for('static', filename='images/look3.jpg') }}"
+            ]
+        };
+
+        function renderImages(urls, container) {
+            container.innerHTML = urls.map(function (src) {
+                return '<img src="' + src + '" alt="Product image">';
+            }).join('');
+        }
+
+        function updateOutput(title, description, images) {
+            document.getElementById('embedded-client-output').textContent = JSON.stringify({
+                title: title,
+                description: description,
+                images: images
+            }, null, 2);
+            renderImages(images, document.getElementById('embedded-client-gallery'));
+        }
+
+        document.getElementById('show-json-data').addEventListener('click', function () {
+            const raw = document.getElementById('product-data').textContent;
+            const payload = JSON.parse(raw);
+            updateOutput(payload.product.title, payload.product.description, payload.product.images);
+        });
+
+        document.getElementById('show-jsonld-data').addEventListener('click', function () {
+            const raw = document.querySelector('script[type="application/ld+json"]').textContent;
+            const data = JSON.parse(raw);
+            updateOutput(data.name, data.description, data.image);
+        });
+
+        document.getElementById('show-global-js').addEventListener('click', function () {
+            const data = window.productData || {};
+            updateOutput(data.title, data.description, data.images);
+        });
+    </script>
+</section>
