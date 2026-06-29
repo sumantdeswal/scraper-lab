@@ -90,7 +90,7 @@ class ChallengeRegistryTests(unittest.TestCase):
         app.testing = True
         client = app.test_client()
 
-        response = client.get("/protected-media/signed/demo-1?token=bad&expires=1")
+        response = client.get("/protected-media/signed/signed-demo?token=bad&expires=1")
 
         self.assertEqual(response.status_code, 403)
 

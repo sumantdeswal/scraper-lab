@@ -1,10 +1,11 @@
 import os
-from flask import Flask, jsonify, render_template, request, send_from_directory, session, url_for
+from flask import Flask, jsonify, make_response, render_template, request, send_from_directory, url_for
 
 from data.challenges import CHALLENGES
-from data.protected_media import apply_protection_context, build_protected_manifest, serve_protected_image
+from data.protected_media import build_protected_manifest, initialize_protection_context, serve_protected_image
 
 app = Flask(__name__)
+app.secret_key = os.environ.get("SECRET_KEY", "protected-media-demo-secret")
 
 @app.route("/")
 def home():
@@ -58,11 +59,12 @@ def challenge(challenge_id):
 
     if challenge_id == "protected-media":
         manifest = build_protected_manifest(url_for)
-        response = render_template(
+        response = make_response(render_template(
             "challenge.html",
             challenge=challenge,
             protected_media=manifest,
-        )
+        ))
+        initialize_protection_context(response)
         return response
 
     return render_template(
@@ -79,9 +81,7 @@ def protected_media_signed_image(image_id):
     if image_name is None:
         return "Not Found", 404
 
-    response = send_from_directory("static", image_name, mimetype="image/jpeg")
-    apply_protection_context(response)
-    return response
+    return send_from_directory("static", image_name, mimetype="image/jpeg")
 
 
 @app.route("/protected-media/expiring/<image_id>")
@@ -92,9 +92,7 @@ def protected_media_expiring_image(image_id):
     if image_name is None:
         return "Not Found", 404
 
-    response = send_from_directory("static", image_name, mimetype="image/jpeg")
-    apply_protection_context(response)
-    return response
+    return send_from_directory("static", image_name, mimetype="image/jpeg")
 
 
 @app.route("/protected-media/cookie/<image_id>")
@@ -105,9 +103,7 @@ def protected_media_cookie_image(image_id):
     if image_name is None:
         return "Not Found", 404
 
-    response = send_from_directory("static", image_name, mimetype="image/jpeg")
-    apply_protection_context(response)
-    return response
+    return send_from_directory("static", image_name, mimetype="image/jpeg")
 
 
 @app.route("/protected-media/auth/<image_id>")
@@ -118,9 +114,7 @@ def protected_media_auth_image(image_id):
     if image_name is None:
         return "Not Found", 404
 
-    response = send_from_directory("static", image_name, mimetype="image/jpeg")
-    apply_protection_context(response)
-    return response
+    return send_from_directory("static", image_name, mimetype="image/jpeg")
 
 
 @app.route("/protected-media/session/<image_id>")
@@ -131,9 +125,7 @@ def protected_media_session_image(image_id):
     if image_name is None:
         return "Not Found", 404
 
-    response = send_from_directory("static", image_name, mimetype="image/jpeg")
-    apply_protection_context(response)
-    return response
+    return send_from_directory("static", image_name, mimetype="image/jpeg")
 
 if __name__ == "__main__":
     app.run(

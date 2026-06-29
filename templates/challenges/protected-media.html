@@ -4,16 +4,53 @@
     <p>This gallery looks like a normal storefront, but each image is behind a different protection mechanism.</p>
 
     <div class="gallery-stack">
+        <article class="gallery-card">
+            <h4>Public Preview</h4>
+            <p>The baseline storefront image is public and should load without any special protection.</p>
+            <div class="gallery-grid">
+                <img src="{{ url_for('static', filename='images/look3.jpg') }}" alt="Public preview" loading="lazy">
+            </div>
+        </article>
+
         {% for item in protected_media %}
         <article class="gallery-card">
             <h4>{{ item.title }}</h4>
             <p>{{ item.description }}</p>
             <div class="gallery-grid">
+                {% if item.kind == 'auth' %}
+                <img data-auth-image="{{ item.image_url }}" alt="{{ item.title }} preview" loading="lazy">
+                {% else %}
                 <img src="{{ item.image_url }}" alt="{{ item.title }} preview" loading="lazy">
+                {% endif %}
             </div>
         </article>
         {% endfor %}
     </div>
+
+    <script>
+        // Authorization-protected assets cannot be loaded with a plain <img> tag because the browser will not
+        // attach a custom Authorization header on that request. This fetches the image as a Blob and exposes it
+        // through an object URL instead.
+        document.querySelectorAll('[data-auth-image]').forEach(function (element) {
+            fetch(element.getAttribute('data-auth-image'), {
+                headers: {
+                    Authorization: 'Bearer demo-access-token'
+                }
+            })
+                .then(function (response) {
+                    if (!response.ok) {
+                        throw new Error('Unauthorized');
+                    }
+                    return response.blob();
+                })
+                .then(function (blob) {
+                    element.src = URL.createObjectURL(blob);
+                })
+                .catch(function () {
+                    element.alt = 'Authorization-protected image unavailable';
+                });
+        });
+    </script>
 
     <pre><code>// The backend signs URLs, checks cookies, validates bearer tokens, and requires a valid session.
 // Each mechanism is explained in the comments in the server-side helper module.</code></pre>

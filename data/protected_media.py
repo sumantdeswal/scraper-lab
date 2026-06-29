@@ -4,7 +4,7 @@ import os
 import time
 from typing import Any, Dict, List, Optional
 
-from flask import current_app, request, send_from_directory, session
+from flask import request, session
 
 PROTECTED_MEDIA_SECRET = os.environ.get("PROTECTED_MEDIA_SECRET", "protected-media-demo-secret").encode("utf-8")
 
@@ -51,8 +51,8 @@ def _sign_payload(payload: str) -> str:
     return hmac.new(PROTECTED_MEDIA_SECRET, payload.encode("utf-8"), hashlib.sha256).hexdigest()
 
 
-def _validate_signed_request(image_id: str, token: Optional[str], expires: Optional[str]) -> bool:
-    if not token or not expires:
+def validate_expiration(expires: Optional[str]) -> bool:
+    if not expires:
         return False
 
     try:
@@ -60,11 +60,30 @@ def _validate_signed_request(image_id: str, token: Optional[str], expires: Optio
     except (TypeError, ValueError):
         return False
 
-    if expires_value < int(time.time()):
+    return expires_value >= int(time.time())
+
+
+def validate_signed_request(image_id: str, token: Optional[str], expires: Optional[str]) -> bool:
+    if not token or not expires:
         return False
 
-    expected_token = _sign_payload(f"{image_id}:{expires_value}")
+    if not validate_expiration(expires):
+        return False
+
+    expected_token = _sign_payload(f"{image_id}:{int(expires)}")
     return hmac.compare_digest(expected_token, token)
+
+
+def validate_cookie_request() -> bool:
+    return request.cookies.get("protected_media_cookie") == "authenticated"
+
+
+def validate_session_request() -> bool:
+    return bool(session.get("protected_media_session"))
+
+
+def validate_authorization_request() -> bool:
+    return request.headers.get("Authorization") == "Bearer demo-access-token"
 
 
 def build_signed_url(image_id: str, expires_in: int, url_for_func, endpoint_name: str) -> str:
@@ -102,8 +121,8 @@ def build_protected_manifest(url_for_func) -> List[Dict[str, Any]]:
     return manifest
 
 
-def apply_protection_context(response) -> None:
-    """Establish the demo session and cookie so the protected routes behave like a real site."""
+def initialize_protection_context(response) -> None:
+    """Establish the demo session and cookie on the challenge page so the protected image requests can validate them."""
     session["protected_media_session"] = True
     response.set_cookie(
         "protected_media_cookie",
@@ -126,7 +145,7 @@ def serve_protected_image(image_id: str, policy: str) -> Optional[object]:
     """Return the static file for an image when the request passes the appropriate protection check."""
     if policy in {"signed", "expiring"}:
         # Signed and expiring URLs require a server-side signature that must match the image id and expiry timestamp.
-        if not _validate_signed_request(
+        if not validate_signed_request(
             image_id,
             request.args.get("token"),
             request.args.get("expires"),
@@ -139,15 +158,15 @@ def serve_protected_image(image_id: str, policy: str) -> Optional[object]:
 
     if policy == "cookie":
         # Cookie-protected images are only accessible when the browser has the expected session cookie set.
-        if request.cookies.get("protected_media_cookie") != "authenticated":
+        if not validate_cookie_request():
             return False
     elif policy == "auth":
         # Authorization-protected images require a bearer token in the request headers.
-        if request.headers.get("Authorization") != "Bearer demo-access-token":
+        if not validate_authorization_request():
             return False
     elif policy == "session":
         # Session-based protection relies on the browser having established a server-side session.
-        if not session.get("protected_media_session"):
+        if not validate_session_request():
             return False
 
     return asset["image"]
