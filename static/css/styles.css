@@ -233,3 +233,77 @@ body {
     font-size: 0.9rem;
     margin-bottom: 0.75rem;
 }
+
+.gallery-stack {
+    display: grid;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.gallery-card {
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    border-radius: 14px;
+    padding: 1rem;
+    background: #f8fafc;
+}
+
+.gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 0.75rem;
+}
+
+.gallery-grid img {
+    width: 100%;
+    height: 120px;
+    object-fit: cover;
+    border-radius: 10px;
+    display: block;
+}
+
+.gallery-controls {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 0.75rem;
+}
+
+.gallery-controls button {
+    border: 0;
+    border-radius: 999px;
+    background: #0d1321;
+    color: #fff;
+    padding: 0.6rem 0.9rem;
+    cursor: pointer;
+}
+
+.gallery-controls button:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.carousel-shell {
+    display: grid;
+    gap: 0.75rem;
+}
+
+.carousel-frame {
+    position: relative;
+    overflow: hidden;
+    border-radius: 14px;
+}
+
+.carousel-frame img {
+    width: 100%;
+    height: 220px;
+    object-fit: cover;
+    display: block;
+}
+
+.carousel-caption {
+    margin: 0;
+    color: #4d5d78;
+}
+
+.infinite-sentinel {
+    height: 1px;
+}

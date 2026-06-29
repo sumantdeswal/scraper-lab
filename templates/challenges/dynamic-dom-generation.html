@@ -11,6 +11,7 @@
         <section>
             <span class="status-pill">Click-based</span>
             <div id="click-root"></div>
+            <p id="runtime-status">Runtime DOM creation pending.</p>
         </section>
     </div>
 
@@ -20,6 +21,8 @@
             "{{ url_for('static', filename='images/look2.jpg') }}",
             "{{ url_for('static', filename='images/look3.jpg') }}"
         ];
+
+        const statusElement = document.getElementById('runtime-status');
 
         function createImage(src, alt) {
             const img = document.createElement('img');
@@ -37,6 +40,14 @@
                 root.appendChild(image);
             }
         }
+
+        const observer = new MutationObserver(function (mutations) {
+            if (mutations.some((mutation) => mutation.addedNodes.length)) {
+                statusElement.textContent = 'MutationObserver detected runtime DOM creation.';
+            }
+        });
+
+        observer.observe(document.getElementById('click-root'), { childList: true, subtree: true });
 
         document.getElementById('load-click-images').addEventListener('click', function () {
             appendImages('click-root', 3, 'Clicked');

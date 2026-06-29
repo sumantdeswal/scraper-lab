@@ -40,5 +40,11 @@ CHALLENGES = {
         "title": "Dynamic DOM Generation",
         "description": "Images created at click interactions and other user-driven events.",
         "template": "challenges/dynamic-dom-generation.html"
+    },
+    "dynamic-galleries": {
+        "number": 8,
+        "title": "Dynamic Galleries",
+        "description": "Gallery content changes while browsing through load more, infinite scroll, and carousel interactions.",
+        "template": "challenges/dynamic-galleries.html"
     }
 }
