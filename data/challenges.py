@@ -34,5 +34,11 @@ CHALLENGES = {
         "title": "Shadow DOM",
         "description": "Images embedded inside open, closed, and nested shadow roots.",
         "template": "challenges/shadow-dom.html"
+    },
+    "dynamic-dom-generation": {
+        "number": 7,
+        "title": "Dynamic DOM Generation",
+        "description": "Images created at runtime through timers, click interactions, and MutationObserver-driven updates.",
+        "template": "challenges/dynamic-dom-generation.html"
     }
 }

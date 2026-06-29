@@ -1,0 +1,84 @@
+<section class="experiment">
+    <h2>Challenge 7</h2>
+    <h3>Dynamic DOM Generation</h3>
+    <p>Images do not exist in the initial DOM. Runtime DOM creation happens through timers, button clicks, and a MutationObserver.</p>
+
+    <div class="experiment-controls">
+        <button id="load-timer-images" type="button">Load After Timer</button>
+        <button id="load-click-images" type="button">Load After Click</button>
+        <button id="build-gallery" type="button">Generate Gallery</button>
+    </div>
+
+    <div class="dynamic-demo-grid">
+        <section>
+            <span class="status-pill">Timer-based</span>
+            <div id="timer-root"></div>
+        </section>
+        <section>
+            <span class="status-pill">Click-based</span>
+            <div id="click-root"></div>
+        </section>
+        <section>
+            <span class="status-pill">Observer-based</span>
+            <div id="observer-root"></div>
+        </section>
+    </div>
+
+    <script>
+        const imageSources = [
+            "{{ url_for('static', filename='images/look1.jpg') }}",
+            "{{ url_for('static', filename='images/look2.jpg') }}",
+            "{{ url_for('static', filename='images/look3.jpg') }}"
+        ];
+
+        function createImage(src, alt) {
+            const img = document.createElement('img');
+            img.src = src;
+            img.alt = alt;
+            img.loading = 'eager';
+            return img;
+        }
+
+        function appendImages(rootId, count, prefix) {
+            const root = document.getElementById(rootId);
+            root.innerHTML = '';
+            for (let index = 0; index < count; index += 1) {
+                const image = createImage(imageSources[index % imageSources.length], prefix + ' image ' + (index + 1));
+                root.appendChild(image);
+            }
+        }
+
+        document.getElementById('load-timer-images').addEventListener('click', function () {
+            window.setTimeout(function () {
+                appendImages('timer-root', 2, 'Timed');
+            }, 600);
+        });
+
+        document.getElementById('load-click-images').addEventListener('click', function () {
+            appendImages('click-root', 3, 'Clicked');
+        });
+
+        document.getElementById('build-gallery').addEventListener('click', function () {
+            const gallery = document.createElement('div');
+            gallery.className = 'image-gallery';
+            imageSources.forEach(function (src, index) {
+                gallery.appendChild(createImage(src, 'Generated gallery image ' + (index + 1)));
+            });
+            document.getElementById('observer-root').appendChild(gallery);
+        });
+
+        const observerRoot = document.getElementById('observer-root');
+        const observer = new MutationObserver(function (mutations) {
+            mutations.forEach(function (mutation) {
+                if (mutation.type === 'childList' && mutation.addedNodes.length) {
+                    const count = mutation.addedNodes.length;
+                    const status = document.createElement('p');
+                    status.textContent = 'MutationObserver detected ' + count + ' newly added node(s).';
+                    observerRoot.prepend(status);
+                }
+            });
+        });
+
+        observer.observe(observerRoot, { childList: true, subtree: true });
+    </script>
+</section>
