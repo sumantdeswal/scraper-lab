@@ -44,6 +44,20 @@ PROTECTED_ASSETS: List[Dict[str, Any]] = [
         "description": "Access is only granted after the browser has established a session.",
         "image": "images/look2.jpg",
     },
+    {
+        "id": "expiring-video",
+        "kind": "expiring",
+        "title": "Expiring Video",
+        "description": "A video file delivered through an expiring signed URL.",
+        "image": "videos/demo.mp4",
+    },
+    {
+        "id": "signed-hls",
+        "kind": "signed",
+        "title": "Signed HLS",
+        "description": "An HLS manifest protected by a signature.",
+        "image": "videos/hls/demo.m3u8",
+    },
 ]
 
 

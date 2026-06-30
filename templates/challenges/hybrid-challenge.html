@@ -6,13 +6,13 @@
     <div class="gallery-stack">
         <article class="gallery-card">
             <h4>Configuration A</h4>
-            <p>✓ REST API<br>✓ Dynamic DOM</p>
+            <p>✓ REST API<br>✓ Dynamic DOM<br>✓ Lazy Load (IntersectionObserver)</p>
             <div id="config-a" class="gallery-grid">Loading…</div>
         </article>
 
         <article class="gallery-card">
             <h4>Configuration B</h4>
-            <p>✓ REST API<br>✓ Dynamic DOM<br>✓ Open Shadow DOM</p>
+            <p>✓ REST API<br>✓ Dynamic DOM<br>✓ Closed Shadow DOM</p>
             <div id="config-b-host"></div>
         </article>
 
@@ -42,13 +42,13 @@
 
         <article class="gallery-card">
             <h4>Configuration G</h4>
-            <p>✓ Self-hosted MP4<br>✓ Dynamic DOM<br>✓ Network Delivery</p>
+            <p>✓ Self-hosted MP4<br>✓ Dynamic DOM<br>✓ Network Delivery<br>✓ Expiring URL</p>
             <div id="config-g"></div>
         </article>
 
         <article class="gallery-card">
             <h4>Configuration H</h4>
-            <p>✓ HLS<br>✓ Network Delivery<br>✓ Dynamic DOM</p>
+            <p>✓ HLS<br>✓ Network Delivery<br>✓ Dynamic DOM<br>✓ Signed URL</p>
             <div id="config-h"></div>
         </article>
 
@@ -80,10 +80,29 @@
                 .then(data => {
                     root.innerHTML = '';
                     const img = document.createElement('img');
-                    img.src = data.product.images[0];
+                    // defer assigning src so the browser won't request it until visible
+                    img.dataset.src = data.product.images[0];
                     img.alt = data.product.title + ' (A)';
                     img.loading = 'lazy';
+                    img.className = 'deferred';
                     root.appendChild(img);
+
+                    // IntersectionObserver to lazy-load when visible
+                    if ('IntersectionObserver' in window) {
+                        const observer = new IntersectionObserver((entries, obs) => {
+                            entries.forEach(entry => {
+                                if (entry.isIntersecting) {
+                                    const el = entry.target;
+                                    el.src = el.dataset.src;
+                                    obs.unobserve(el);
+                                }
+                            });
+                        }, { rootMargin: '200px' });
+                        observer.observe(img);
+                    } else {
+                        // Fallback: load after a short delay
+                        setTimeout(() => { img.src = img.dataset.src; }, 200);
+                    }
                 })
                 .catch(() => { root.textContent = 'Failed to load product image.'; });
         })();
@@ -91,7 +110,7 @@
         // Configuration B: open shadow DOM with image created from REST API
         (function configB() {
             const host = document.getElementById('config-b-host');
-            const shadow = host.attachShadow({ mode: 'open' });
+            const shadow = host.attachShadow({ mode: 'closed' });
             shadow.innerHTML = `<div class="shadow-shell">Loading…</div>`;
             fetch('/api/product')
                 .then(r => r.json())
@@ -203,7 +222,7 @@
             });
         })();
 
-        // Configuration G: self-hosted MP4 (dynamic DOM + network delivery)
+        // Configuration G: self-hosted MP4 but delivered via an expiring signed URL
         (function configG() {
             const root = document.getElementById('config-g');
             const video = document.createElement('video');
@@ -211,19 +230,28 @@
             video.width = 480;
             video.autoplay = false;
             video.loop = false;
-            video.src = "{{ url_for('static', filename='videos/demo.mp4') }}";
+            const expiring = protectedManifest.find(p => p.id === 'expiring-video' || p.kind === 'expiring');
+            if (expiring) {
+                video.src = expiring.image_url;
+            } else {
+                video.src = "{{ url_for('static', filename='videos/demo.mp4') }}";
+            }
             root.appendChild(video);
         })();
 
-        // Configuration H: HLS streaming (m3u8) — use native playback when available
+        // Configuration H: HLS streaming delivered via a signed URL (if available)
         (function configH() {
             const root = document.getElementById('config-h');
             const vid = document.createElement('video');
             vid.controls = true;
             vid.width = 480;
             vid.autoplay = false;
-            // Point directly at the m3u8 manifest; in browsers without native HLS this may not play
-            vid.src = "{{ url_for('static', filename='videos/hls/demo.m3u8') }}";
+            const signedHls = protectedManifest.find(p => p.id === 'signed-hls');
+            if (signedHls) {
+                vid.src = signedHls.image_url;
+            } else {
+                vid.src = "{{ url_for('static', filename='videos/hls/demo.m3u8') }}";
+            }
             root.appendChild(vid);
         })();
 

@@ -1,4 +1,5 @@
 import os
+import mimetypes
 from flask import Flask, jsonify, make_response, render_template, request, send_from_directory, url_for
 
 from data.challenges import CHALLENGES
@@ -92,8 +93,8 @@ def protected_media_signed_image(image_id):
         return "Forbidden", 403
     if image_name is None:
         return "Not Found", 404
-
-    return send_from_directory("static", image_name, mimetype="image/jpeg")
+    mime = mimetypes.guess_type(image_name)[0] or 'application/octet-stream'
+    return send_from_directory("static", image_name, mimetype=mime)
 
 
 @app.route("/protected-media/expiring/<image_id>")
@@ -103,8 +104,8 @@ def protected_media_expiring_image(image_id):
         return "Forbidden", 403
     if image_name is None:
         return "Not Found", 404
-
-    return send_from_directory("static", image_name, mimetype="image/jpeg")
+    mime = mimetypes.guess_type(image_name)[0] or 'application/octet-stream'
+    return send_from_directory("static", image_name, mimetype=mime)
 
 
 @app.route("/protected-media/cookie/<image_id>")
@@ -114,8 +115,8 @@ def protected_media_cookie_image(image_id):
         return "Forbidden", 403
     if image_name is None:
         return "Not Found", 404
-
-    return send_from_directory("static", image_name, mimetype="image/jpeg")
+    mime = mimetypes.guess_type(image_name)[0] or 'application/octet-stream'
+    return send_from_directory("static", image_name, mimetype=mime)
 
 
 @app.route("/protected-media/auth/<image_id>")
@@ -125,8 +126,8 @@ def protected_media_auth_image(image_id):
         return "Forbidden", 403
     if image_name is None:
         return "Not Found", 404
-
-    return send_from_directory("static", image_name, mimetype="image/jpeg")
+    mime = mimetypes.guess_type(image_name)[0] or 'application/octet-stream'
+    return send_from_directory("static", image_name, mimetype=mime)
 
 
 @app.route("/protected-media/session/<image_id>")
@@ -136,8 +137,8 @@ def protected_media_session_image(image_id):
         return "Forbidden", 403
     if image_name is None:
         return "Not Found", 404
-
-    return send_from_directory("static", image_name, mimetype="image/jpeg")
+    mime = mimetypes.guess_type(image_name)[0] or 'application/octet-stream'
+    return send_from_directory("static", image_name, mimetype=mime)
 
 if __name__ == "__main__":
     app.run(
