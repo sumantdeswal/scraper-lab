@@ -58,5 +58,11 @@ CHALLENGES = {
         "title": "Protected Media",
         "description": "A realistic gallery that uses signed URLs, expiring links, cookies, authorization headers, and session checks.",
         "template": "challenges/protected-media.html"
+    },
+    "video-media": {
+        "number": 11,
+        "title": "Video Media",
+        "description": "A realistic gallery that combines self-hosted videos, HLS streaming, and third-party embedded videos.",
+        "template": "challenges/video-media.html"
     }
 }

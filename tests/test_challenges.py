@@ -86,6 +86,25 @@ class ChallengeRegistryTests(unittest.TestCase):
         self.assertIn("Signed URL", body)
         self.assertIn("Authorization", body)
 
+    def test_video_media_challenge_is_registered(self):
+        self.assertIn("video-media", CHALLENGES)
+        challenge = CHALLENGES["video-media"]
+        self.assertEqual(challenge["title"], "Video Media")
+        self.assertEqual(challenge["template"], "challenges/video-media.html")
+
+    def test_video_media_page_renders_expected_content(self):
+        app.testing = True
+        client = app.test_client()
+
+        response = client.get("/challenge/video-media")
+
+        self.assertEqual(response.status_code, 200)
+        body = response.get_data(as_text=True)
+        self.assertIn("Self-Hosted Video", body)
+        self.assertIn("HLS Streaming", body)
+        self.assertIn("youtube.com/embed", body)
+        self.assertIn("iframe", body)
+
     def test_signed_media_route_rejects_bad_signature(self):
         app.testing = True
         client = app.test_client()

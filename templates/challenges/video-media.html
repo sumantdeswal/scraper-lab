@@ -1,0 +1,103 @@
+<section class="experiment">
+    <h2>Challenge 11</h2>
+    <h3>Video Media</h3>
+    <p>This gallery combines three common video delivery patterns that appear together on modern sites: self-hosted MP4 playback, HLS streaming over a playlist, and third-party embedding through an iframe.</p>
+
+    <div class="video-gallery">
+        <article class="video-card">
+            <div class="video-card__header">
+                <span class="status-pill">Self-Hosted Video</span>
+                <h4>Native embedded MP4 playback</h4>
+            </div>
+            <p>These examples use the browser's built-in video player with the media file served directly by the application.</p>
+
+            <div class="video-stack">
+                <div class="video-example">
+                    <h5>Simple direct video</h5>
+                    <video src="{{ url_for('static', filename='videos/demo.mp4') }}" controls preload="metadata" poster="{{ url_for('static', filename='images/look1.jpg') }}"></video>
+                </div>
+
+                <div class="video-example">
+                    <h5>Source element with fallback</h5>
+                    <video controls preload="metadata">
+                        <source src="{{ url_for('static', filename='videos/demo.mp4') }}" type="video/mp4">
+                        Your browser does not support embedded video.
+                    </video>
+                </div>
+
+                <div class="video-example video-example--hero">
+                    <h5>Autoplay muted loop background video</h5>
+                    <video class="background-video" autoplay muted loop playsinline poster="{{ url_for('static', filename='images/look2.jpg') }}">
+                        <source src="{{ url_for('static', filename='videos/demo.mp4') }}" type="video/mp4">
+                    </video>
+                    <div class="background-video__overlay">
+                        <strong>Background clip</strong>
+                        <span>Muted autoplay loop for a realistic hero-style presentation.</span>
+                    </div>
+                </div>
+            </div>
+        </article>
+
+        <article class="video-card">
+            <div class="video-card__header">
+                <span class="status-pill">HLS Streaming</span>
+                <h4>Playlist-based streaming</h4>
+            </div>
+            <p>This section uses a .m3u8 playlist and Hls.js so browsers without native HLS support can still stream the provided segments.</p>
+
+            <div class="video-example">
+                <h5>Adaptive HTTP streaming</h5>
+                <video id="hls-video" controls playsinline preload="metadata"></video>
+                <p class="video-caption">The player requests the playlist and segment files when the stream is started.</p>
+            </div>
+        </article>
+
+        <article class="video-card">
+            <div class="video-card__header">
+                <span class="status-pill">Third-Party Embedded Video</span>
+                <h4>Provider iframe only</h4>
+            </div>
+            <p>This section uses an iframe instead of a native video element, so the page exposes the embedded provider URL rather than a self-hosted file.</p>
+
+            <div class="video-example">
+                <h5>Embedded YouTube player</h5>
+                <iframe
+                    src="https://www.youtube.com/embed/E8GjrmtxIA0?rel=0"
+                    title="Embedded YouTube video"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    allowfullscreen
+                    loading="lazy"
+                ></iframe>
+            </div>
+        </article>
+    </div>
+</section>
+
+<hr>
+
+<section class="goal">
+    <h2>Challenge Goal</h2>
+    <ul>
+        <li>Identify self-hosted video URLs and source elements</li>
+        <li>Discover the HLS playlist and segment requests from the stream player</li>
+        <li>Locate the third-party iframe URL that points to the embedded provider</li>
+    </ul>
+</section>
+
+<script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.20/dist/hls.min.js"></script>
+<script>
+    // The HLS section uses Hls.js when native support is unavailable and otherwise
+    // falls back to the browser's built-in HLS handling for the provided playlist.
+    const hlsPlaylistUrl = "{{ url_for('static', filename='videos/hls/demo.m3u8') }}";
+    const hlsVideo = document.getElementById("hls-video");
+
+    if (hlsVideo) {
+        if (window.Hls && Hls.isSupported()) {
+            const hls = new Hls();
+            hls.loadSource(hlsPlaylistUrl);
+            hls.attachMedia(hlsVideo);
+        } else if (hlsVideo.canPlayType("application/vnd.apple.mpegurl")) {
+            hlsVideo.src = hlsPlaylistUrl;
+        }
+    }
+</script>
