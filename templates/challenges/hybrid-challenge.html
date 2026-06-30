@@ -107,7 +107,7 @@
                 .catch(() => { root.textContent = 'Failed to load product image.'; });
         })();
 
-        // Configuration B: open shadow DOM with image created from REST API
+        // Configuration B: closed shadow DOM with image created from REST API
         (function configB() {
             const host = document.getElementById('config-b-host');
             const shadow = host.attachShadow({ mode: 'closed' });
@@ -222,7 +222,7 @@
             });
         })();
 
-        // Configuration G: self-hosted MP4 but delivered via an expiring signed URL
+        // Configuration G: self-hosted MP4 delivered via an expiring URL
         (function configG() {
             const root = document.getElementById('config-g');
             const video = document.createElement('video');
@@ -230,7 +230,7 @@
             video.width = 480;
             video.autoplay = false;
             video.loop = false;
-            const expiring = protectedManifest.find(p => p.id === 'expiring-video' || p.kind === 'expiring');
+            const expiring = protectedManifest.find(p => p.id === 'expiring-video');
             if (expiring) {
                 video.src = expiring.image_url;
             } else {

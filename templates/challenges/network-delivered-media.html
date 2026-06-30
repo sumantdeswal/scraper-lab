@@ -19,7 +19,7 @@
         }
 
         async function fetchRestProduct() {
-            const response = await fetch('{{ url_for('api_product') }}');
+            const response = await fetch("{{ url_for('api_product') }}");
             const data = await response.json();
             const output = {
                 source: 'REST',
