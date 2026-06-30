@@ -65,4 +65,11 @@ CHALLENGES = {
         "description": "A realistic gallery that combines self-hosted videos, HLS streaming, and third-party embedded videos.",
         "template": "challenges/video-media.html"
     }
+
+    ,"hybrid-challenge": {
+        "number": 12,
+        "title": "Hybrid Challenge (Final Benchmark)",
+        "description": "A mixed-media benchmark that combines multiple delivery mechanisms across gallery items to simulate complex ecommerce pages.",
+        "template": "challenges/hybrid-challenge.html"
+    }
 }

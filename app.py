@@ -66,6 +66,18 @@ def challenge(challenge_id):
         ))
         initialize_protection_context(response)
         return response
+    if challenge_id == "hybrid-challenge":
+        # Hybrid challenge uses many of the same protected-media helpers to
+        # demonstrate signed URLs, session and cookie protections alongside
+        # other delivery mechanisms.
+        manifest = build_protected_manifest(url_for)
+        response = make_response(render_template(
+            "challenge.html",
+            challenge=challenge,
+            protected_media=manifest,
+        ))
+        initialize_protection_context(response)
+        return response
 
     return render_template(
         "challenge.html",

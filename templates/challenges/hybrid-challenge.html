@@ -1,0 +1,302 @@
+<section class="experiment">
+    <h2>Challenge 12</h2>
+    <h3>Hybrid Challenge — Final Benchmark</h3>
+    <p>This page intentionally composes many delivery mechanisms across gallery items. Each item is labelled with the techniques used so the page can be treated as an ablation study.</p>
+
+    <div class="gallery-stack">
+        <article class="gallery-card">
+            <h4>Configuration A</h4>
+            <p>✓ REST API<br>✓ Dynamic DOM</p>
+            <div id="config-a" class="gallery-grid">Loading…</div>
+        </article>
+
+        <article class="gallery-card">
+            <h4>Configuration B</h4>
+            <p>✓ REST API<br>✓ Dynamic DOM<br>✓ Open Shadow DOM</p>
+            <div id="config-b-host"></div>
+        </article>
+
+        <article class="gallery-card">
+            <h4>Configuration C</h4>
+            <p>✓ REST API<br>✓ Dynamic DOM<br>✓ Open Shadow DOM<br>✓ Signed URL</p>
+            <div id="config-c-host"></div>
+        </article>
+
+        <article class="gallery-card">
+            <h4>Configuration D</h4>
+            <p>✓ REST API<br>✓ Dynamic DOM<br>✓ Closed Shadow DOM<br>✓ Signed URL<br>✓ Session Protection</p>
+            <div id="config-d-host"></div>
+        </article>
+
+        <article class="gallery-card">
+            <h4>Configuration E</h4>
+            <p>✓ REST API<br>✓ Blob URL<br>✓ Dynamic DOM<br>✓ Closed Shadow DOM<br>✓ Session Protection</p>
+            <div id="config-e-host"></div>
+        </article>
+
+        <article class="gallery-card">
+            <h4>Configuration F</h4>
+            <p>✓ Embedded Client Data<br>✓ REST API<br>✓ Shadow DOM<br>✓ Dynamic Gallery<br>✓ Signed URL</p>
+            <div id="config-f-host"></div>
+        </article>
+
+        <article class="gallery-card">
+            <h4>Configuration G</h4>
+            <p>✓ Self-hosted MP4<br>✓ Dynamic DOM<br>✓ Network Delivery</p>
+            <div id="config-g"></div>
+        </article>
+
+        <article class="gallery-card">
+            <h4>Configuration H</h4>
+            <p>✓ HLS<br>✓ Network Delivery<br>✓ Dynamic DOM</p>
+            <div id="config-h"></div>
+        </article>
+
+        <article class="gallery-card">
+            <h4>Configuration I</h4>
+            <p>✓ Shadow DOM<br>✓ Third-party iframe (Vimeo)</p>
+            <div id="config-i-host"></div>
+        </article>
+
+        <article class="gallery-card">
+            <h4>Configuration J — BOSS CONFIGURATION</h4>
+            <p>✓ Embedded Client Data<br>✓ REST API<br>✓ Dynamic DOM<br>✓ Closed Shadow DOM<br>✓ Blob URL<br>✓ Signed URL<br>✓ Session Protection<br>✓ Dynamic Gallery<br>✓ Canvas Rendering</p>
+            <div id="config-j-host"></div>
+        </article>
+    </div>
+
+    <script>
+        const protectedManifest = {{ protected_media|tojson }};
+
+        function findProtected(kind) {
+            return protectedManifest.find(item => item.kind === kind);
+        }
+
+        // Configuration A: fetch product JSON and render first image dynamically
+        (function configA() {
+            const root = document.getElementById('config-a');
+            fetch('/api/product')
+                .then(r => r.json())
+                .then(data => {
+                    root.innerHTML = '';
+                    const img = document.createElement('img');
+                    img.src = data.product.images[0];
+                    img.alt = data.product.title + ' (A)';
+                    img.loading = 'lazy';
+                    root.appendChild(img);
+                })
+                .catch(() => { root.textContent = 'Failed to load product image.'; });
+        })();
+
+        // Configuration B: open shadow DOM with image created from REST API
+        (function configB() {
+            const host = document.getElementById('config-b-host');
+            const shadow = host.attachShadow({ mode: 'open' });
+            shadow.innerHTML = `<div class="shadow-shell">Loading…</div>`;
+            fetch('/api/product')
+                .then(r => r.json())
+                .then(data => {
+                    shadow.innerHTML = `
+                        <style>.thumb{width:100%;border-radius:8px}</style>
+                        <img class="thumb" src="${data.product.images[1]}" alt="Config B">
+                    `;
+                })
+                .catch(() => { shadow.innerHTML = '<div>Failed</div>'; });
+        })();
+
+        // Configuration C: open shadow DOM + signed URL from protected manifest
+        (function configC() {
+            const host = document.getElementById('config-c-host');
+            const shadow = host.attachShadow({ mode: 'open' });
+            const signed = findProtected('signed');
+            shadow.innerHTML = `<div class="shadow-shell">Loading signed image…</div>`;
+            if (!signed) {
+                shadow.innerHTML = '<div>No signed asset available</div>';
+                return;
+            }
+            // Use REST to get product info then swap to signed URL for one image
+            fetch('/api/product')
+                .then(r => r.json())
+                .then(data => {
+                    shadow.innerHTML = `
+                        <style>.thumb{width:100%;border-radius:8px}</style>
+                        <img class="thumb" src="${signed.image_url}" alt="Config C">
+                    `;
+                }).catch(() => { shadow.innerHTML = '<div>Failed</div>'; });
+        })();
+
+        // Configuration D: closed shadow + session-protected image (server session initialized)
+        (function configD() {
+            const host = document.getElementById('config-d-host');
+            const closed = host.attachShadow({ mode: 'closed' });
+            const sessionAsset = findProtected('session');
+            if (!sessionAsset) {
+                closed.innerHTML = '<div>No session asset</div>';
+                return;
+            }
+            closed.innerHTML = `
+                <style>.thumb{width:100%;border-radius:8px}</style>
+                <div>Loading protected session image…</div>
+            `;
+            // closed shadow still allows image loading from inside the shadow root
+            const img = document.createElement('img');
+            img.className = 'thumb';
+            img.alt = 'Config D';
+            img.src = sessionAsset.image_url;
+            // replace placeholder when loaded
+            img.onload = () => { closed.innerHTML = ''; closed.appendChild(img); };
+            img.onerror = () => { closed.innerHTML = '<div>Protected image unavailable</div>'; };
+        })();
+
+        // Configuration E: fetch signed URL as blob, create object URL, place inside closed shadow
+        (function configE() {
+            const host = document.getElementById('config-e-host');
+            const closed = host.attachShadow({ mode: 'closed' });
+            const signed = findProtected('signed');
+            if (!signed) {
+                closed.innerHTML = '<div>No signed asset</div>';
+                return;
+            }
+            closed.innerHTML = '<div>Fetching blob and creating object URL…</div>';
+            fetch(signed.image_url)
+                .then(r => {
+                    if (!r.ok) throw new Error('fetch failed');
+                    return r.blob();
+                })
+                .then(blob => {
+                    const url = URL.createObjectURL(blob);
+                    const img = document.createElement('img');
+                    img.className = 'thumb';
+                    img.src = url;
+                    img.alt = 'Config E';
+                    closed.innerHTML = '';
+                    closed.appendChild(img);
+                })
+                .catch(() => { closed.innerHTML = '<div>Unable to load blob image</div>'; });
+        })();
+
+        // Configuration F: embedded client data + dynamic gallery inside shadow DOM using signed URL
+        (function configF() {
+            const host = document.getElementById('config-f-host');
+            const shadow = host.attachShadow({ mode: 'open' });
+
+            // Embedded JSON payload that imitates client-bundled product + signed images
+            const embedded = {
+                title: 'Embedded Product',
+                images: (protectedManifest || []).slice(0,2).map(p => p.image_url).concat("{{ url_for('static', filename='images/look1.jpg') }}")
+            };
+
+            shadow.innerHTML = `
+                <style>.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.grid img{width:100%;border-radius:8px}</style>
+                <h5>${embedded.title}</h5>
+                <div id="embedded-gallery" class="grid">Loading…</div>
+            `;
+
+            const gallery = shadow.getElementById('embedded-gallery');
+            gallery.innerHTML = '';
+            embedded.images.forEach(src => {
+                if (!src) return;
+                const img = document.createElement('img');
+                img.src = src;
+                img.loading = 'lazy';
+                gallery.appendChild(img);
+            });
+        })();
+
+        // Configuration G: self-hosted MP4 (dynamic DOM + network delivery)
+        (function configG() {
+            const root = document.getElementById('config-g');
+            const video = document.createElement('video');
+            video.controls = true;
+            video.width = 480;
+            video.autoplay = false;
+            video.loop = false;
+            video.src = "{{ url_for('static', filename='videos/demo.mp4') }}";
+            root.appendChild(video);
+        })();
+
+        // Configuration H: HLS streaming (m3u8) — use native playback when available
+        (function configH() {
+            const root = document.getElementById('config-h');
+            const vid = document.createElement('video');
+            vid.controls = true;
+            vid.width = 480;
+            vid.autoplay = false;
+            // Point directly at the m3u8 manifest; in browsers without native HLS this may not play
+            vid.src = "{{ url_for('static', filename='videos/hls/demo.m3u8') }}";
+            root.appendChild(vid);
+        })();
+
+        // Configuration I: Vimeo inside an open shadow DOM
+        (function configI() {
+            const host = document.getElementById('config-i-host');
+            const shadow = host.attachShadow({ mode: 'open' });
+            shadow.innerHTML = `
+                <style>iframe{width:100%;height:250px;border:0;border-radius:8px}</style>
+                <iframe src="https://player.vimeo.com/video/76979871" allowfullscreen></iframe>
+            `;
+        })();
+
+        // Configuration J: BOSS — combine many techniques, render gallery inside closed shadow, fetch signed blobs, render via canvas for one item
+        (function configJ() {
+            const host = document.getElementById('config-j-host');
+            const closed = host.attachShadow({ mode: 'closed' });
+            closed.innerHTML = '<div>Preparing boss gallery…</div>';
+
+            const bossData = {
+                title: 'BOSS Gallery',
+                // prefer signed and session assets if available
+                sources: [
+                    ...(protectedManifest || []).map(p => p.image_url).slice(0,3),
+                    "{{ url_for('static', filename='images/look2.jpg') }}",
+                    "{{ url_for('static', filename='images/look3.jpg') }}"
+                ]
+            };
+
+            // Create gallery shell inside closed shadow
+            const container = document.createElement('div');
+            container.innerHTML = `<style>.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.grid img, .grid canvas{width:100%;border-radius:8px;background:#f6f8fb}</style><h5>${bossData.title}</h5><div id="boss-grid" class="grid"></div>`;
+            closed.innerHTML = '';
+            closed.appendChild(container);
+            const grid = container.querySelector('#boss-grid');
+
+            // Helper to fetch blob and optionally draw onto canvas
+            function addBlobAsImage(src, useCanvas) {
+                fetch(src)
+                    .then(r => { if (!r.ok) throw new Error('fetch'); return r.blob(); })
+                    .then(blob => {
+                        const url = URL.createObjectURL(blob);
+                        if (useCanvas) {
+                            const canvas = document.createElement('canvas');
+                            const img = new Image();
+                            img.onload = function () {
+                                canvas.width = img.width;
+                                canvas.height = img.height;
+                                const ctx = canvas.getContext('2d');
+                                ctx.drawImage(img, 0, 0);
+                                // keep canvas in gallery
+                                grid.appendChild(canvas);
+                                URL.revokeObjectURL(url);
+                            };
+                            img.src = url;
+                        } else {
+                            const img = document.createElement('img');
+                            img.src = url;
+                            img.loading = 'lazy';
+                            grid.appendChild(img);
+                        }
+                    })
+                    .catch(() => {
+                        const el = document.createElement('div'); el.textContent = 'item unavailable'; grid.appendChild(el);
+                    });
+            }
+
+            // Mix of direct URLs and signed blobs — mark one to render via canvas
+            bossData.sources.forEach((src, i) => {
+                // render first one via canvas to exercise canvas rendering path
+                addBlobAsImage(src, i === 0);
+            });
+
+        })();
+    </script>
+</section>
