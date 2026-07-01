@@ -101,12 +101,6 @@
                         const blob = new Blob([decrypted], { type: "image/jpeg" });
                         const bitmap = await createImageBitmap(blob);
 
-                        const canvas = document.createElement('canvas');
-                        canvas.width = bitmap.width;
-                        canvas.height = bitmap.height;
-                        const ctx = canvas.getContext('2d');
-                        ctx.drawImage(bitmap, 0, 0);
-
                         this._shadow.innerHTML = `
                             <style>
                                 .shell { padding: 1rem; border: 1px solid #d3dce6; border-radius: 1rem; background: #f6f8fb; }
@@ -120,8 +114,11 @@
                         `;
 
                         const canvasEl = this._shadow.querySelector('canvas');
-                        if (canvasEl) {
-                            canvasEl.getContext('2d').drawImage(bitmap, 0, 0);
+                        if (canvasEl && bitmap) {
+                            canvasEl.width = bitmap.width;
+                            canvasEl.height = bitmap.height;
+                            const ctx = canvasEl.getContext('2d');
+                            ctx.drawImage(bitmap, 0, 0);
                             canvasEl.addEventListener('contextmenu', (e) => {
                                 e.preventDefault();
                             });

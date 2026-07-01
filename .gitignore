@@ -38,3 +38,10 @@ build/
 tmp/
 uploads/
 generated/
+
+# Extracted challenge artifacts
+*.png
+extract.js
+/node_modules/
+package-lock.json
+package.json
