@@ -113,6 +113,57 @@ class ChallengeRegistryTests(unittest.TestCase):
 
         self.assertEqual(response.status_code, 403)
 
+    def test_nightmare_challenge_is_registered(self):
+        self.assertIn("nightmare-challenge", CHALLENGES)
+        challenge = CHALLENGES["nightmare-challenge"]
+        self.assertEqual(challenge["title"], "Nightmare Configuration")
+        self.assertEqual(challenge["template"], "challenges/nightmare-challenge.html")
+
+    def test_nightmare_challenge_page_renders_expected_content(self):
+        app.testing = True
+        client = app.test_client()
+
+        response = client.get("/challenge/nightmare-challenge")
+
+        self.assertEqual(response.status_code, 200)
+        body = response.get_data(as_text=True)
+        self.assertIn("Nightmare Configuration", body)
+        self.assertIn("Closed Shadow DOM", body)
+        self.assertIn("Blob URL", body)
+        self.assertIn("Right-click Disabled", body)
+
+    def test_nightmare_product_api_returns_signed_url(self):
+        app.testing = True
+        client = app.test_client()
+
+        response = client.get("/api/nightmare-product")
+
+        self.assertEqual(response.status_code, 200)
+        data = response.get_json()
+        self.assertIn("product", data)
+        self.assertIn("signed_image_url", data["product"])
+        self.assertIn("/protected-media/nightmare/", data["product"]["signed_image_url"])
+
+    def test_nightmare_protected_route_rejects_bad_signature(self):
+        app.testing = True
+        client = app.test_client()
+
+        response = client.get("/protected-media/nightmare/signed-demo?token=bad&expires=1")
+
+        self.assertEqual(response.status_code, 403)
+
+    def test_nightmare_protected_route_rejects_missing_session(self):
+        app.testing = True
+        client = app.test_client()
+
+        import time
+        expires = int(time.time()) + 5
+        token = "valid-looking-token"
+
+        response = client.get(f"/protected-media/nightmare/signed-demo?token={token}&expires={expires}")
+
+        self.assertEqual(response.status_code, 403)
+
 
 if __name__ == "__main__":
     unittest.main()

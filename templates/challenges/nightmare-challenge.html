@@ -1,0 +1,111 @@
+<section class="experiment">
+    <h2>Challenge 13</h2>
+    <h3>Nightmare Configuration</h3>
+
+    <div class="gallery-stack">
+        <article class="gallery-card">
+            <h4>Nightmare Configuration</h4>
+            <p>
+                ✓ Closed Shadow DOM<br>
+                ✓ Dynamic DOM Generation<br>
+                ✓ REST API<br>
+                ✓ Signed URL<br>
+                ✓ 5-Second Expiring URL<br>
+                ✓ Blob URL<br>
+                ✓ Session Protection<br>
+                ✓ Right-click Disabled
+            </p>
+            <p>
+                This configuration simulates a modern ecommerce product page where the image is hidden behind
+                multiple overlapping extraction barriers. The page starts with no image in the DOM.
+                JavaScript dynamically creates a custom component that attaches a closed shadow root,
+                fetches product metadata from a REST endpoint, receives a signed URL valid for only 5 seconds,
+                fetches that URL as a Blob, and renders the result via <code>URL.createObjectURL</code>.
+                The browser only ever sees a Blob URL attached to the image tag.
+                The original signed URL expires immediately after the blob is created, and it is bound to an
+                active session established by the challenge page itself — opening the same signed URL in a new
+                browser or incognito window returns 403 Forbidden. Right-click is also disabled over the image
+                to prevent simple "Copy image address" extraction.
+            </p>
+            <div id="nightmare-host"></div>
+        </article>
+    </div>
+
+    <script>
+        if ('customElements' in window) {
+            class NightmareMediaLoader extends HTMLElement {
+                constructor() {
+                    super();
+                    this._shadow = this.attachShadow({ mode: 'closed' });
+                }
+
+                connectedCallback() {
+                    this._shadow.innerHTML = `
+                        <style>
+                            .shell { padding: 1rem; border: 1px solid #d3dce6; border-radius: 1rem; background: #f6f8fb; }
+                            .thumb { width: 100%; border-radius: 8px; display: block; }
+                            .placeholder { color: #5a6878; font-size: 0.95rem; }
+                        </style>
+                        <div class="shell">
+                            <p class="placeholder">Loading nightmare image…</p>
+                        </div>
+                    `;
+
+                    fetch('/api/nightmare-product')
+                        .then(r => {
+                            if (!r.ok) throw new Error('product fetch failed');
+                            return r.json();
+                        })
+                        .then(data => {
+                            const signedUrl = data.product.signed_image_url;
+                            if (!signedUrl) throw new Error('no signed url');
+
+                            return fetch(signedUrl)
+                                .then(r => {
+                                    if (!r.ok) throw new Error('signed fetch failed: ' + r.status);
+                                    return r.blob();
+                                })
+                                .then(blob => {
+                                    const blobUrl = URL.createObjectURL(blob);
+                                    this._renderBlob(blobUrl);
+                                });
+                        })
+                        .catch(() => {
+                            this._shadow.innerHTML = `
+                                <style>.shell{padding:1rem;border:1px solid #d3dce6;border-radius:1rem;background:#f6f8fb}.error{color:#a94442}</style>
+                                <div class="shell"><p class="error">Nightmare image unavailable.</p></div>
+                            `;
+                        });
+                }
+
+                _renderBlob(blobUrl) {
+                    this._shadow.innerHTML = `
+                        <style>
+                            .shell { padding: 1rem; border: 1px solid #d3dce6; border-radius: 1rem; background: #f6f8fb; }
+                            .thumb { width: 100%; border-radius: 8px; display: block; }
+                            .caption { margin-top: 0.5rem; color: #5a6878; font-size: 0.85rem; }
+                        </style>
+                        <div class="shell">
+                            <img class="thumb" src="${blobUrl}" alt="Nightmare configuration image" draggable="false">
+                            <p class="caption">Blob URL attached. Original signed URL expired at fetch time.</p>
+                        </div>
+                    `;
+
+                    const img = this._shadow.querySelector('img');
+                    if (img) {
+                        img.addEventListener('contextmenu', (e) => {
+                            e.preventDefault();
+                        });
+                    }
+                }
+            }
+
+            customElements.define('nightmare-media-loader', NightmareMediaLoader);
+        }
+
+        const host = document.getElementById('nightmare-host');
+        if (host) {
+            host.innerHTML = '<nightmare-media-loader></nightmare-media-loader>';
+        }
+    </script>
+</section>

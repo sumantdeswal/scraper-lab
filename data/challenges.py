@@ -66,10 +66,10 @@ CHALLENGES = {
         "template": "challenges/video-media.html"
     }
 
-    ,"hybrid-challenge": {
-        "number": 12,
-        "title": "Hybrid Challenge (Final Benchmark)",
-        "description": "A mixed-media benchmark that combines multiple delivery mechanisms across gallery items to simulate complex ecommerce pages.",
-        "template": "challenges/hybrid-challenge.html"
+    ,"nightmare-challenge": {
+        "number": 13,
+        "title": "Nightmare Configuration",
+        "description": "The hardest realistic media extraction scenario — combining closed Shadow DOM, dynamic DOM, REST API, signed URL, short expiring URL, Blob URL, session protection, and right-click disable.",
+        "template": "challenges/nightmare-challenge.html"
     }
 }
