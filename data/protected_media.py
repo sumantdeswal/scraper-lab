@@ -1,9 +1,12 @@
+import base64
 import hashlib
 import hmac
+import json
 import os
 import time
 from typing import Any, Dict, List, Optional
 
+from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 from flask import request, session
 
 PROTECTED_MEDIA_SECRET = os.environ.get("PROTECTED_MEDIA_SECRET", "protected-media-demo-secret").encode("utf-8")
@@ -17,6 +20,28 @@ def is_token_consumed(token: str) -> bool:
 
 def mark_token_consumed(token: str) -> None:
     CONSUMED_TOKENS.add(token)
+
+
+def validate_signed_request_payload(payload: str, token: Optional[str], expires: Optional[str]) -> bool:
+    if not token or not expires:
+        return False
+
+    if not validate_expiration(expires):
+        return False
+
+    expected_token = _sign_payload(payload)
+    return hmac.compare_digest(expected_token, token)
+
+
+def validate_and_consume_token(token: str, payload: str, expires: Optional[str]) -> bool:
+    if not validate_signed_request_payload(payload, token, expires):
+        return False
+
+    if is_token_consumed(token):
+        return False
+
+    mark_token_consumed(token)
+    return True
 
 PROTECTED_ASSETS: List[Dict[str, Any]] = [
     {
@@ -194,3 +219,44 @@ def serve_protected_image(image_id: str, policy: str) -> Optional[object]:
             return False
 
     return asset["image"]
+
+
+ENCRYPTED_PAYLOADS: Dict[str, Dict[str, Any]] = {}
+
+
+def generate_key_id() -> str:
+    return hmac.new(os.urandom(32), b"nightmare-key-id", hashlib.sha256).hexdigest()[:16]
+
+
+def encrypt_media(image_path: str, key_id: str) -> Dict[str, Any]:
+    key = AESGCM.generate_key(bit_length=256)
+    iv = os.urandom(12)
+    aesgcm = AESGCM(key)
+
+    with open(image_path, "rb") as f:
+        plaintext = f.read()
+
+    ciphertext = aesgcm.encrypt(iv, plaintext, None)
+
+    payload = {
+        "iv": base64.b64encode(iv).decode("ascii"),
+        "key": base64.b64encode(key).decode("ascii"),
+        "ciphertext": ciphertext,
+        "created": time.time(),
+        "consumed": False,
+    }
+
+    ENCRYPTED_PAYLOADS[key_id] = payload
+    return payload
+
+
+def get_encrypted_payload(key_id: str) -> Optional[Dict[str, Any]]:
+    return ENCRYPTED_PAYLOADS.get(key_id)
+
+
+def consume_key(key_id: str) -> Optional[Dict[str, Any]]:
+    payload = ENCRYPTED_PAYLOADS.get(key_id)
+    if not payload or payload.get("consumed"):
+        return None
+    payload["consumed"] = True
+    return payload

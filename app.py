@@ -1,9 +1,10 @@
 import os
+import time
 import mimetypes
 from flask import Flask, jsonify, make_response, render_template, request, send_from_directory, url_for
 
 from data.challenges import CHALLENGES
-from data.protected_media import build_protected_manifest, initialize_protection_context, serve_protected_image, build_signed_url, validate_signed_request, validate_session_request, get_asset, is_token_consumed, mark_token_consumed
+from data.protected_media import build_protected_manifest, initialize_protection_context, serve_protected_image, build_signed_url, validate_signed_request, validate_session_request, get_asset, is_token_consumed, mark_token_consumed, validate_and_consume_token, encrypt_media, generate_key_id, get_encrypted_payload, consume_key, _sign_payload
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "protected-media-demo-secret")
@@ -36,13 +37,26 @@ def api_nightmare_product():
     if asset is None:
         return jsonify({"error": "asset not found"}), 404
 
-    signed_url = build_signed_url(asset["id"], 5, url_for, "nightmare_protected_image")
+    key_id = generate_key_id()
+    image_path = os.path.join("static", asset["image"])
+    encrypt_media(image_path, key_id)
+
+    expires = int(time.time()) + 5
+
+    encrypted_token = _sign_payload(f"nightmare-enc:{asset['id']}:{key_id}:{expires}")
+    key_token = _sign_payload(f"nightmare-key:{key_id}:{expires}")
+
+    encrypted_url = url_for("nightmare_encrypted_image", image_id=asset["id"], token=encrypted_token, expires=expires, key_id=key_id)
+    key_url = url_for("nightmare_ephemeral_key", key_id=key_id, token=key_token, expires=expires)
+
     return jsonify({
         "product": {
             "title": "Nightmare Jacket",
             "description": "A product whose media is protected by multiple overlapping extraction barriers.",
             "images": [],
-            "signed_image_url": signed_url,
+            "encrypted_image_url": encrypted_url,
+            "key_url": key_url,
+            "key_id": key_id,
         }
     })
 
@@ -167,27 +181,48 @@ def protected_media_session_image(image_id):
     return send_from_directory("static", image_name, mimetype=mime)
 
 
-@app.route("/protected-media/nightmare/<image_id>")
-def nightmare_protected_image(image_id):
+@app.route("/protected-media/nightmare/encrypted/<image_id>")
+def nightmare_encrypted_image(image_id):
     token = request.args.get("token")
     expires = request.args.get("expires")
+    key_id = request.args.get("key_id")
 
-    if not validate_signed_request(image_id, token, expires):
+    payload_signature = f"nightmare-enc:{image_id}:{key_id}:{expires}"
+
+    if not validate_and_consume_token(token, payload_signature, expires):
         return "Forbidden", 403
 
     if not validate_session_request():
         return "Forbidden", 403
 
-    if is_token_consumed(token):
-        return "Forbidden", 403
-
-    mark_token_consumed(token)
-
-    asset = get_asset(image_id)
-    if asset is None:
+    encrypted = get_encrypted_payload(key_id)
+    if not encrypted:
         return "Not Found", 404
 
-    return send_from_directory("static", asset["image"], mimetype="image/jpeg")
+    return encrypted["ciphertext"], 200, {"Content-Type": "application/octet-stream"}
+
+
+@app.route("/protected-media/nightmare/key/<key_id>")
+def nightmare_ephemeral_key(key_id):
+    token = request.args.get("token")
+    expires = request.args.get("expires")
+
+    payload_signature = f"nightmare-key:{key_id}:{expires}"
+
+    if not validate_and_consume_token(token, payload_signature, expires):
+        return "Forbidden", 403
+
+    if not validate_session_request():
+        return "Forbidden", 403
+
+    key_data = consume_key(key_id)
+    if not key_data:
+        return "Not Found", 404
+
+    return jsonify({
+        "key": key_data["key"],
+        "iv": key_data["iv"]
+    })
 
 if __name__ == "__main__":
     app.run(

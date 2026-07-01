@@ -69,7 +69,7 @@ CHALLENGES = {
     ,"nightmare-challenge": {
         "number": 13,
         "title": "Nightmare Configuration",
-        "description": "The hardest realistic media extraction scenario — combining closed Shadow DOM, dynamic DOM, REST API, single-use signed URL, short expiring URL, session protection, and right-click disable.",
+        "description": "The hardest realistic media extraction scenario — combining closed Shadow DOM, dynamic DOM, REST API, single-use signed URL, short expiring URL, session protection, encrypted transport, and right-click disable.",
         "template": "challenges/nightmare-challenge.html"
     }
 }

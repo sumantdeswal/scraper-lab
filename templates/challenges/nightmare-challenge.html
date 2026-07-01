@@ -12,18 +12,18 @@
                 ✓ Single-use Signed URL<br>
                 ✓ 5-Second Expiring URL<br>
                 ✓ Session Protection<br>
+                ✓ Encrypted Transport<br>
                 ✓ Right-click Disabled
             </p>
             <p>
-                This configuration simulates a modern ecommerce product page where the image is hidden behind
-                multiple overlapping extraction barriers. The page starts with no image in the DOM.
-                JavaScript dynamically creates a custom component that attaches a closed shadow root,
-                fetches product metadata from a REST endpoint, and receives a signed URL valid for only 5 seconds.
-                The signed URL is assigned directly to the <code>&lt;img&gt;</code> element.
-                The server validates the signature, expiration, active session, and single-use token state.
-                After the image loads successfully, the token is immediately consumed.
-                Any subsequent request to the exact same URL returns HTTP 403 Forbidden,
-                while the already-rendered image continues to display normally from the browser cache.
+                This configuration demonstrates layered browser-side media protection.
+                The page starts with no image in the DOM. JavaScript dynamically creates a custom component
+                that attaches a closed shadow root, fetches product metadata from a REST endpoint, and receives
+                a signed URL for an encrypted binary. The browser downloads the encrypted payload and an
+                ephemeral AES-256-GCM decryption key. Client-side decryption uses the Web Crypto API.
+                The decrypted bitmap is rendered onto a Canvas inside the closed Shadow DOM.
+                The original image is never directly downloadable, and both the encrypted payload and
+                the decryption key are single-use, session-bound, and expire within seconds.
             </p>
             <div id="nightmare-host"></div>
         </article>
@@ -41,7 +41,6 @@
                     this._shadow.innerHTML = `
                         <style>
                             .shell { padding: 1rem; border: 1px solid #d3dce6; border-radius: 1rem; background: #f6f8fb; }
-                            .thumb { width: 100%; border-radius: 8px; display: block; }
                             .placeholder { color: #5a6878; font-size: 0.95rem; }
                         </style>
                         <div class="shell">
@@ -55,10 +54,22 @@
                             return r.json();
                         })
                         .then(data => {
-                            const signedUrl = data.product.signed_image_url;
-                            if (!signedUrl) throw new Error('no signed url');
+                            const encryptedUrl = data.product.encrypted_image_url;
+                            const keyUrl = data.product.key_url;
+                            if (!encryptedUrl || !keyUrl) throw new Error('missing urls');
 
-                            this._renderImage(signedUrl);
+                            return Promise.all([
+                                fetch(encryptedUrl).then(r => {
+                                    if (!r.ok) throw new Error('encrypted fetch failed: ' + r.status);
+                                    return r.arrayBuffer();
+                                }),
+                                fetch(keyUrl).then(r => {
+                                    if (!r.ok) throw new Error('key fetch failed: ' + r.status);
+                                    return r.json();
+                                })
+                            ]).then(([encryptedBuffer, keyData]) => {
+                                return this._decryptAndRender(encryptedBuffer, keyData);
+                            });
                         })
                         .catch(() => {
                             this._shadow.innerHTML = `
@@ -68,24 +79,58 @@
                         });
                 }
 
-                _renderImage(signedUrl) {
-                    this._shadow.innerHTML = `
-                        <style>
-                            .shell { padding: 1rem; border: 1px solid #d3dce6; border-radius: 1rem; background: #f6f8fb; }
-                            .thumb { width: 100%; border-radius: 8px; display: block; }
-                            .caption { margin-top: 0.5rem; color: #5a6878; font-size: 0.85rem; }
-                        </style>
-                        <div class="shell">
-                            <img class="thumb" src="${signedUrl}" alt="Nightmare configuration image" draggable="false">
-                            <p class="caption">Single-use signed URL assigned directly. Any replay now returns 403.</p>
-                        </div>
-                    `;
+                async _decryptAndRender(encryptedBuffer, keyData) {
+                    try {
+                        const keyBytes = Uint8Array.from(atob(keyData.key), c => c.charCodeAt(0));
+                        const iv = Uint8Array.from(atob(keyData.iv), c => c.charCodeAt(0));
 
-                    const img = this._shadow.querySelector('img');
-                    if (img) {
-                        img.addEventListener('contextmenu', (e) => {
-                            e.preventDefault();
-                        });
+                        const cryptoKey = await crypto.subtle.importKey(
+                            "raw",
+                            keyBytes,
+                            { name: "AES-GCM" },
+                            false,
+                            ["decrypt"]
+                        );
+
+                        const decrypted = await crypto.subtle.decrypt(
+                            { name: "AES-GCM", iv: iv },
+                            cryptoKey,
+                            encryptedBuffer
+                        );
+
+                        const blob = new Blob([decrypted], { type: "image/jpeg" });
+                        const bitmap = await createImageBitmap(blob);
+
+                        const canvas = document.createElement('canvas');
+                        canvas.width = bitmap.width;
+                        canvas.height = bitmap.height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(bitmap, 0, 0);
+
+                        this._shadow.innerHTML = `
+                            <style>
+                                .shell { padding: 1rem; border: 1px solid #d3dce6; border-radius: 1rem; background: #f6f8fb; }
+                                canvas { width: 100%; border-radius: 8px; display: block; }
+                                .caption { margin-top: 0.5rem; color: #5a6878; font-size: 0.85rem; }
+                            </style>
+                            <div class="shell">
+                                <canvas></canvas>
+                                <p class="caption">Decrypted via AES-256-GCM. Original image never served directly.</p>
+                            </div>
+                        `;
+
+                        const canvasEl = this._shadow.querySelector('canvas');
+                        if (canvasEl) {
+                            canvasEl.getContext('2d').drawImage(bitmap, 0, 0);
+                            canvasEl.addEventListener('contextmenu', (e) => {
+                                e.preventDefault();
+                            });
+                        }
+                    } catch (e) {
+                        this._shadow.innerHTML = `
+                            <style>.shell{padding:1rem;border:1px solid #d3dce6;border-radius:1rem;background:#f6f8fb}.error{color:#a94442}</style>
+                            <div class="shell"><p class="error">Decryption failed.</p></div>
+                        `;
                     }
                 }
             }
