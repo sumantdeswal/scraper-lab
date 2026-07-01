@@ -8,6 +8,16 @@ from flask import request, session
 
 PROTECTED_MEDIA_SECRET = os.environ.get("PROTECTED_MEDIA_SECRET", "protected-media-demo-secret").encode("utf-8")
 
+CONSUMED_TOKENS = set()
+
+
+def is_token_consumed(token: str) -> bool:
+    return token in CONSUMED_TOKENS
+
+
+def mark_token_consumed(token: str) -> None:
+    CONSUMED_TOKENS.add(token)
+
 PROTECTED_ASSETS: List[Dict[str, Any]] = [
     {
         "id": "signed-demo",

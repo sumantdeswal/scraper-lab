@@ -3,7 +3,7 @@ import mimetypes
 from flask import Flask, jsonify, make_response, render_template, request, send_from_directory, url_for
 
 from data.challenges import CHALLENGES
-from data.protected_media import build_protected_manifest, initialize_protection_context, serve_protected_image, build_signed_url, validate_signed_request, validate_session_request, get_asset
+from data.protected_media import build_protected_manifest, initialize_protection_context, serve_protected_image, build_signed_url, validate_signed_request, validate_session_request, get_asset, is_token_consumed, mark_token_consumed
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "protected-media-demo-secret")
@@ -169,15 +169,19 @@ def protected_media_session_image(image_id):
 
 @app.route("/protected-media/nightmare/<image_id>")
 def nightmare_protected_image(image_id):
-    if not validate_signed_request(
-        image_id,
-        request.args.get("token"),
-        request.args.get("expires"),
-    ):
+    token = request.args.get("token")
+    expires = request.args.get("expires")
+
+    if not validate_signed_request(image_id, token, expires):
         return "Forbidden", 403
 
     if not validate_session_request():
         return "Forbidden", 403
+
+    if is_token_consumed(token):
+        return "Forbidden", 403
+
+    mark_token_consumed(token)
 
     asset = get_asset(image_id)
     if asset is None:

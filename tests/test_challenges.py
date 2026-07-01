@@ -129,8 +129,9 @@ class ChallengeRegistryTests(unittest.TestCase):
         body = response.get_data(as_text=True)
         self.assertIn("Nightmare Configuration", body)
         self.assertIn("Closed Shadow DOM", body)
-        self.assertIn("Blob URL", body)
+        self.assertIn("Single-use Signed URL", body)
         self.assertIn("Right-click Disabled", body)
+        self.assertNotIn("Blob URL", body)
 
     def test_nightmare_product_api_returns_signed_url(self):
         app.testing = True
@@ -163,6 +164,24 @@ class ChallengeRegistryTests(unittest.TestCase):
         response = client.get(f"/protected-media/nightmare/signed-demo?token={token}&expires={expires}")
 
         self.assertEqual(response.status_code, 403)
+
+    def test_nightmare_protected_route_single_use_consumes_token(self):
+        app.testing = True
+        client = app.test_client()
+
+        with client.session_transaction() as sess:
+            sess["protected_media_session"] = True
+
+        import time
+        from data.protected_media import _sign_payload
+        expires = int(time.time()) + 5
+        token = _sign_payload(f"signed-demo:{expires}")
+
+        first_response = client.get(f"/protected-media/nightmare/signed-demo?token={token}&expires={expires}")
+        self.assertEqual(first_response.status_code, 200)
+
+        second_response = client.get(f"/protected-media/nightmare/signed-demo?token={token}&expires={expires}")
+        self.assertEqual(second_response.status_code, 403)
 
 
 if __name__ == "__main__":
