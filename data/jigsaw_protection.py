@@ -9,6 +9,7 @@ import os
 import secrets
 import time
 import hashlib
+import random
 from typing import Any, Dict, List, Optional
 from io import BytesIO
 
@@ -28,6 +29,9 @@ os.makedirs(JIGSAW_TILE_DIR, exist_ok=True)
 # In-memory tile registry: tile_id -> metadata dict
 JIGSAW_TILE_REGISTRY: Dict[str, Dict[str, Any]] = {}
 
+# In-memory nonce registry: nonce -> {tile_ids, expires, consumed_tiles, fully_consumed}
+JIGSAW_NONCE_REGISTRY: Dict[str, Dict[str, Any]] = {}
+
 
 def _limit_registry(max_entries: int = 500) -> None:
     if len(JIGSAW_TILE_REGISTRY) > max_entries:
@@ -37,6 +41,17 @@ def _limit_registry(max_entries: int = 500) -> None:
         )[: len(JIGSAW_TILE_REGISTRY) - max_entries]
         for tile_id, _ in oldest:
             del JIGSAW_TILE_REGISTRY[tile_id]
+
+
+def _cleanup_expired_nonces() -> None:
+    now = time.time()
+    expired = [k for k, v in JIGSAW_NONCE_REGISTRY.items() if v["expires"] < now]
+    for k in expired:
+        del JIGSAW_NONCE_REGISTRY[k]
+
+
+def generate_tile_id() -> str:
+    return secrets.token_hex(16)
 
 
 class JigsawTileProvider:
@@ -69,7 +84,7 @@ class JigsawTileProvider:
                     buf.seek(0)
                     tile_bytes = buf.getvalue()
 
-                    tile_id = secrets.token_hex(8)
+                    tile_id = generate_tile_id()
                     filename = f"{tile_id}.png"
                     filepath = os.path.join(JIGSAW_TILE_DIR, filename)
                     with open(filepath, "wb") as f:
@@ -101,26 +116,14 @@ class JigsawTileProvider:
 
     def build_tile_manifest(self, url_for_func, session_id: Optional[str] = None) -> Dict[str, Any]:
         tiles = self.generate_tiles()
+        tile_ids = [t["id"] for t in tiles]
+        nonce = create_manifest_nonce(tile_ids, ttl=30)
+
+        orders = list(range(self.grid_size * self.grid_size))
+        random.shuffle(orders)
 
         manifest_tiles: List[Dict[str, Any]] = []
-        for tile in tiles:
-            tile_info: Dict[str, Any] = {
-                "id": tile["id"],
-                "row": tile["row"],
-                "col": tile["col"],
-                "width": tile["width"],
-                "height": tile["height"],
-                "grid_width": tile["grid_width"],
-                "grid_height": tile["grid_height"],
-                "image_width": tile["image_width"],
-                "image_height": tile["image_height"],
-                "placement_meta": {
-                    "grid_row": tile["row"],
-                    "grid_col": tile["col"],
-                    "order_index": tile["row"] * tile["grid_width"] + tile["col"],
-                },
-            }
-
+        for idx, tile in enumerate(tiles):
             if ENABLE_SIGNED_TILE_URLS:
                 from data.protected_media import build_signed_url
 
@@ -128,18 +131,25 @@ class JigsawTileProvider:
             else:
                 tile_url = url_for_func("jigsaw_tile", tile_id=tile["id"])
 
-            tile_info["tile_url"] = tile_url
+            sep = "&" if "?" in tile_url else "?"
+            tile_url = f"{tile_url}{sep}nonce={nonce}"
+
+            tile_info: Dict[str, Any] = {
+                "id": tile["id"],
+                "tile_url": tile_url,
+                "order": orders[idx],
+            }
+
             manifest_tiles.append(tile_info)
 
         if ENABLE_RANDOM_DOM_ORDER:
-            import random
-
             random.shuffle(manifest_tiles)
 
         return {
             "grid_size": self.grid_size,
             "image_width": tiles[0]["image_width"],
             "image_height": tiles[0]["image_height"],
+            "nonce": nonce,
             "tiles": manifest_tiles,
         }
 
@@ -161,3 +171,35 @@ def build_jigsaw_manifest(url_for_func, image_path: str, grid_size: int = GRID_S
 
 def serve_jigsaw_tile(tile_id: str) -> Optional[Dict[str, Any]]:
     return JigsawTileProvider.serve_tile(tile_id)
+
+
+def create_manifest_nonce(tile_ids: List[str], ttl: int = 30) -> str:
+    nonce = secrets.token_hex(32)
+    expires = int(time.time()) + ttl
+    JIGSAW_NONCE_REGISTRY[nonce] = {
+        "tile_ids": set(tile_ids),
+        "expires": expires,
+        "consumed_tiles": set(),
+        "fully_consumed": False,
+    }
+    _cleanup_expired_nonces()
+    return nonce
+
+
+def consume_nonce_for_tile(nonce: str, tile_id: str) -> bool:
+    entry = JIGSAW_NONCE_REGISTRY.get(nonce)
+    if not entry:
+        return False
+    if entry["fully_consumed"]:
+        return False
+    if entry["expires"] < time.time():
+        del JIGSAW_NONCE_REGISTRY[nonce]
+        return False
+    if tile_id not in entry["tile_ids"]:
+        return False
+    if tile_id in entry["consumed_tiles"]:
+        return False
+    entry["consumed_tiles"].add(tile_id)
+    if len(entry["consumed_tiles"]) == len(entry["tile_ids"]):
+        entry["fully_consumed"] = True
+    return True

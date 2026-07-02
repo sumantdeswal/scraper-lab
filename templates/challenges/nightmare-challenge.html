@@ -14,7 +14,10 @@
                 ✓ Session Protection<br>
                 ✓ Encrypted Transport<br>
                 ✓ Right-click Disabled<br>
-                ✓ Jigsaw Partitioning
+                ✓ Jigsaw Partitioning<br>
+                ✓ Randomized Nonce Binding<br>
+                ✓ CSS Order Placement (No Grid Metadata)<br>
+                ✓ Viewport Obfuscation
             </p>
             <p>
                 This configuration demonstrates layered browser-side media protection.
@@ -25,13 +28,15 @@
                 The decrypted bitmap is rendered onto a Canvas inside the closed Shadow DOM.
                 Additionally, the same source image is delivered as a randomized jigsaw tile grid where
                 each tile has an independent signed URL and randomized DOM order, preventing simple
-                extraction by position or path traversal.
+                extraction by position or path traversal. Tile placement is calculated via CSS order
+                so no grid coordinates appear in the manifest. Viewport noise layers and invisible
+                overlays further obscure screenshot and pixel-analysis tools.
             </p>
             <div id="nightmare-host"></div>
         </article>
     </div>
 
-    <script src="{{ url_for('static', filename='js/jigsaw-component.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/jigsaw-component.js') }}" integrity="sha384-wbt+zJ8O5CM+z1Y7i7IuLK0RUMnE6rxCm6Gy+ScnnoHwnfOd4nvziVtg0pj+c54p" crossorigin="anonymous"></script>
     <script>
         if ('customElements' in window) {
             class NightmareMediaLoader extends HTMLElement {
@@ -43,8 +48,11 @@
                 connectedCallback() {
                     this._shadow.innerHTML = `
                         <style>
-                            .shell { padding: 1rem; border: 1px solid #d3dce6; border-radius: 1rem; background: #f6f8fb; }
+                            .shell { padding: 1rem; border: 1px solid #d3dce6; border-radius: 1rem; background: #f6f8fb; position: relative; overflow: hidden; }
                             .placeholder { color: #5a6878; font-size: 0.95rem; }
+                            canvas { width: 100%; border-radius: 8px; display: block; position: relative; z-index: 1; }
+                            .caption { margin-top: 0.5rem; color: #5a6878; font-size: 0.85rem; position: relative; z-index: 1; }
+                            .overlay { position: absolute; inset: 0; pointer-events: none; z-index: 2; opacity: 0.06; mix-blend-mode: difference; }
                         </style>
                         <div class="shell">
                             <p class="placeholder">Loading nightmare image…</p>
@@ -106,9 +114,10 @@
 
                         this._shadow.innerHTML = `
                             <style>
-                                .shell { padding: 1rem; border: 1px solid #d3dce6; border-radius: 1rem; background: #f6f8fb; }
-                                canvas { width: 100%; border-radius: 8px; display: block; }
-                                .caption { margin-top: 0.5rem; color: #5a6878; font-size: 0.85rem; }
+                                .shell { padding: 1rem; border: 1px solid #d3dce6; border-radius: 1rem; background: #f6f8fb; position: relative; overflow: hidden; }
+                                canvas { width: 100%; border-radius: 8px; display: block; position: relative; z-index: 1; }
+                                .caption { margin-top: 0.5rem; color: #5a6878; font-size: 0.85rem; position: relative; z-index: 1; }
+                                .overlay { position: absolute; inset: 0; pointer-events: none; z-index: 2; opacity: 0.06; mix-blend-mode: difference; }
                             </style>
                             <div class="shell">
                                 <canvas></canvas>
@@ -125,6 +134,28 @@
                             canvasEl.addEventListener('contextmenu', (e) => {
                                 e.preventDefault();
                             });
+
+                            const overlayCanvas = document.createElement('canvas');
+                            overlayCanvas.className = 'overlay';
+                            overlayCanvas.width = bitmap.width;
+                            overlayCanvas.height = bitmap.height;
+                            const octx = overlayCanvas.getContext('2d');
+                            if (octx) {
+                                const imgData = octx.createImageData(overlayCanvas.width, overlayCanvas.height);
+                                const d = imgData.data;
+                                for (let i = 0; i < d.length; i += 4) {
+                                    const v = Math.floor(Math.random() * 256);
+                                    d[i] = v;
+                                    d[i + 1] = v;
+                                    d[i + 2] = v;
+                                    d[i + 3] = 255;
+                                }
+                                octx.putImageData(imgData, 0, 0);
+                            }
+                            const shell = this._shadow.querySelector('.shell');
+                            if (shell) {
+                                shell.appendChild(overlayCanvas);
+                            }
                         }
                     } catch (e) {
                         this._shadow.innerHTML = `
@@ -142,5 +173,42 @@
         if (host) {
             host.innerHTML = '<nightmare-media-loader></nightmare-media-loader><br><br><secure-tile-image manifest-url="/api/jigsaw-manifest"></secure-tile-image>';
         }
+    </script>
+
+    <style>
+        .viewport-obfuscation-layer {
+            position: fixed;
+            pointer-events: none;
+            z-index: 9999;
+            opacity: 0;
+            font-size: 1px;
+            color: transparent;
+            user-select: none;
+        }
+        .viewport-obfuscation-layer span {
+            position: absolute;
+            display: block;
+            font-family: monospace;
+            line-height: 1;
+            color: transparent;
+            user-select: none;
+        }
+    </style>
+    <script>
+        (function() {
+            if (document.querySelector('.viewport-obfuscation-layer')) return;
+            const layer = document.createElement('div');
+            layer.className = 'viewport-obfuscation-layer';
+            const chars = '0123456789ABCDEFabcdef';
+            for (let i = 0; i < 200; i++) {
+                const span = document.createElement('span');
+                span.textContent = chars[Math.floor(Math.random() * chars.length)];
+                span.style.left = Math.random() * 100 + 'vw';
+                span.style.top = Math.random() * 100 + 'vh';
+                span.style.fontSize = (Math.floor(Math.random() * 12) + 8) + 'px';
+                layer.appendChild(span);
+            }
+            document.body.appendChild(layer);
+        })();
     </script>
 </section>

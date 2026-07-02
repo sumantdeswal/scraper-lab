@@ -7,7 +7,7 @@ if ('customElements' in window) {
 
         connectedCallback() {
             const manifestUrl = this.getAttribute('manifest-url') || '/api/jigsaw-manifest';
-            this._shadow.innerHTML = "<style>.shell{padding:1rem;border:1px solid #d3dce6;border-radius:.75rem;background:#f6f8fb}.placeholder{color:#5a6878;font-size:.95rem}.error{color:#a94442}</style><div class="shell"><p class="placeholder">Loading jigsaw tiles…</p></div>";
+            this._shadow.innerHTML = '<style>.shell{padding:1rem;border:1px solid #d3dce6;border-radius:.75rem;background:#f6f8fb}.placeholder{color:#5a6878;font-size:.95rem}.error{color:#a94442}</style><div class="shell"><p class="placeholder">Loading jigsaw tiles…</p></div>';
 
             fetch(manifestUrl)
                 .then(r => {
@@ -27,14 +27,19 @@ if ('customElements' in window) {
             const tileWidth = Math.ceil(imgWidth / gridSize);
             const tileHeight = Math.ceil(imgHeight / gridSize);
 
-            this._shadow.innerHTML = "<style>:host{display:block;box-sizing:border-box}*,*::before,*::after{box-sizing:inherit}.shell{padding:1rem;border:1px solid #d3dce6;border-radius:.75rem;background:#f6f8fb}.tile-grid{display:grid;grid-template-columns:repeat(" + gridSize + "," + tileWidth + "px);grid-template-rows:repeat(" + gridSize + "," + tileHeight + "px);width:" + imgWidth + "px;overflow:hidden}.tile{width:" + tileWidth + "px;height:" + tileHeight + "px;display:block;object-fit:cover}.placeholder{width:" + tileWidth + "px;height:" + tileHeight + "px;display:flex;align-items:center;justify-content:center;color:#8a9aad;font-size:.75rem;background:#f6f8fb;border:1px dashed #d3dce6}.caption{margin-top:.5rem;color:#5a6878;font-size:.85rem}</style><div class=\"shell\"><div class=\"tile-grid\" id=\"tile-grid\"></div><p class=\"caption\">Jigsaw Partitioning · " + gridSize + "×" + gridSize + " grid · Randomized delivery</p></div>";
+            const tileGridStyle = 'display:grid;grid-template-columns:repeat(' + gridSize + ',' + tileWidth + 'px);grid-template-rows:repeat(' + gridSize + ',' + tileHeight + 'px);width:' + imgWidth + 'px;overflow:hidden;position:relative;';
+            const tileStyle = 'width:' + tileWidth + 'px;height:' + tileHeight + 'px;display:block;object-fit:cover;';
+            const placeholderStyle = 'width:' + tileWidth + 'px;height:' + tileHeight + 'px;display:flex;align-items:center;justify-content:center;color:#8a9aad;font-size:.75rem;background:#f6f8fb;border:1px dashed #d3dce6;';
+
+            this._shadow.innerHTML = '<style>:host{display:block;box-sizing:border-box}*,*::before,*::after{box-sizing:inherit}.shell{padding:1rem;border:1px solid #d3dce6;border-radius:.75rem;background:#f6f8fb}.tile-grid{' + tileGridStyle + '}.tile{' + tileStyle + '}.placeholder{' + placeholderStyle + '}.caption{margin-top:.5rem;color:#5a6878;font-size:.85rem}.noise{position:absolute;inset:0;pointer-events:none;opacity:0.08;mix-blend-mode:difference;z-index:2}</style><div class="shell"><div class="tile-grid" id="tile-grid"></div><p class="caption">Jigsaw Partitioning · ' + gridSize + '×' + gridSize + ' grid · Randomized delivery</p></div>';
+
+            this._injectViewportNoise(tileWidth * gridSize, tileHeight * gridSize);
 
             const grid = this._shadow.getElementById("tile-grid");
 
             manifest.tiles.forEach(tile => {
                 const wrapper = document.createElement("div");
-                wrapper.style.gridRow = String(tile.row + 1);
-                wrapper.style.gridColumn = String(tile.col + 1);
+                wrapper.style.order = String(tile.order || 0);
 
                 if (tile.tile_url) {
                     const img = document.createElement("img");
@@ -43,6 +48,7 @@ if ('customElements' in window) {
                     img.alt = "";
                     img.draggable = false;
                     img.referrerPolicy = "no-referrer";
+                    img.setAttribute("data-tile-id", tile.id);
                     img.addEventListener("contextmenu", e => e.preventDefault());
 
                     img.onerror = () => {
@@ -56,6 +62,33 @@ if ('customElements' in window) {
 
                 grid.appendChild(wrapper);
             });
+        }
+
+        _injectViewportNoise(width, height) {
+            try {
+                const canvas = document.createElement("canvas");
+                canvas.className = "noise";
+                canvas.width = width || 400;
+                canvas.height = height || 300;
+                const ctx = canvas.getContext("2d");
+                if (ctx) {
+                    const imageData = ctx.createImageData(canvas.width, canvas.height);
+                    const data = imageData.data;
+                    for (let i = 0; i < data.length; i += 4) {
+                        const v = Math.floor(Math.random() * 256);
+                        data[i] = v;
+                        data[i + 1] = v;
+                        data[i + 2] = v;
+                        data[i + 3] = 255;
+                    }
+                    ctx.putImageData(imageData, 0, 0);
+                }
+                const shell = this._shadow.querySelector(".shell");
+                if (shell) {
+                    shell.appendChild(canvas);
+                }
+            } catch (e) {
+            }
         }
 
         _createPlaceholder(w, h) {

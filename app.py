@@ -5,7 +5,7 @@ from flask import Flask, jsonify, make_response, render_template, request, send_
 
 from data.challenges import CHALLENGES
 from data.protected_media import build_protected_manifest, initialize_protection_context, serve_protected_image, build_signed_url, validate_signed_request, validate_session_request, get_asset, is_token_consumed, mark_token_consumed, validate_and_consume_token, encrypt_media, generate_key_id, get_encrypted_payload, consume_key, _sign_payload
-from data.jigsaw_protection import build_jigsaw_manifest, serve_jigsaw_tile, USE_TILED_DELIVERY, ENABLE_SIGNED_TILE_URLS
+from data.jigsaw_protection import build_jigsaw_manifest, serve_jigsaw_tile, USE_TILED_DELIVERY, ENABLE_SIGNED_TILE_URLS, consume_nonce_for_tile
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "protected-media-demo-secret")
@@ -251,6 +251,11 @@ def jigsaw_tile(image_id):
             request.args.get("token"),
             request.args.get("expires"),
         ):
+            return "Forbidden", 403
+
+    nonce = request.args.get("nonce")
+    if nonce:
+        if not consume_nonce_for_tile(nonce, image_id):
             return "Forbidden", 403
 
     tile = serve_jigsaw_tile(image_id)
