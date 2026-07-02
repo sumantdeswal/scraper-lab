@@ -5,6 +5,7 @@ from flask import Flask, jsonify, make_response, render_template, request, send_
 
 from data.challenges import CHALLENGES
 from data.protected_media import build_protected_manifest, initialize_protection_context, serve_protected_image, build_signed_url, validate_signed_request, validate_session_request, get_asset, is_token_consumed, mark_token_consumed, validate_and_consume_token, encrypt_media, generate_key_id, get_encrypted_payload, consume_key, _sign_payload
+from data.jigsaw_protection import build_jigsaw_manifest, serve_jigsaw_tile, USE_TILED_DELIVERY, ENABLE_SIGNED_TILE_URLS
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "protected-media-demo-secret")
@@ -223,6 +224,41 @@ def nightmare_ephemeral_key(key_id):
         "key": key_data["key"],
         "iv": key_data["iv"]
     })
+
+
+@app.route("/api/jigsaw-manifest")
+def api_jigsaw_manifest():
+    if not USE_TILED_DELIVERY:
+        return jsonify({"error": "tiled delivery disabled"}), 404
+
+    asset = get_asset("signed-demo")
+    if asset is None:
+        return jsonify({"error": "asset not found"}), 404
+
+    image_path = os.path.join("static", asset["image"])
+    manifest = build_jigsaw_manifest(url_for, image_path)
+    return jsonify(manifest)
+
+
+@app.route("/jigsaw/tile/<image_id>")
+def jigsaw_tile(image_id):
+    if not validate_session_request():
+        return "Forbidden", 403
+
+    if ENABLE_SIGNED_TILE_URLS:
+        if not validate_signed_request(
+            image_id,
+            request.args.get("token"),
+            request.args.get("expires"),
+        ):
+            return "Forbidden", 403
+
+    tile = serve_jigsaw_tile(image_id)
+    if tile is None:
+        return "Not Found", 404
+
+    return tile["bytes"], 200, {"Content-Type": tile["mime"]}
+
 
 if __name__ == "__main__":
     app.run(

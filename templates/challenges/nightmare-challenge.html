@@ -13,7 +13,8 @@
                 ✓ 5-Second Expiring URL<br>
                 ✓ Session Protection<br>
                 ✓ Encrypted Transport<br>
-                ✓ Right-click Disabled
+                ✓ Right-click Disabled<br>
+                ✓ Jigsaw Partitioning
             </p>
             <p>
                 This configuration demonstrates layered browser-side media protection.
@@ -22,13 +23,15 @@
                 a signed URL for an encrypted binary. The browser downloads the encrypted payload and an
                 ephemeral AES-256-GCM decryption key. Client-side decryption uses the Web Crypto API.
                 The decrypted bitmap is rendered onto a Canvas inside the closed Shadow DOM.
-                The original image is never directly downloadable, and both the encrypted payload and
-                the decryption key are single-use, session-bound, and expire within seconds.
+                Additionally, the same source image is delivered as a randomized jigsaw tile grid where
+                each tile has an independent signed URL and randomized DOM order, preventing simple
+                extraction by position or path traversal.
             </p>
             <div id="nightmare-host"></div>
         </article>
     </div>
 
+    <script src="{{ url_for('static', filename='js/jigsaw-component.js') }}"></script>
     <script>
         if ('customElements' in window) {
             class NightmareMediaLoader extends HTMLElement {
@@ -137,7 +140,7 @@
 
         const host = document.getElementById('nightmare-host');
         if (host) {
-            host.innerHTML = '<nightmare-media-loader></nightmare-media-loader>';
+            host.innerHTML = '<nightmare-media-loader></nightmare-media-loader><br><br><secure-tile-image manifest-url="/api/jigsaw-manifest"></secure-tile-image>';
         }
     </script>
 </section>
