@@ -39,7 +39,8 @@ if ('customElements' in window) {
 
             manifest.tiles.forEach(tile => {
                 const wrapper = document.createElement("div");
-                wrapper.style.order = String(tile.order || 0);
+                wrapper.style.gridRow = String((tile.row || 0) + 1);
+                wrapper.style.gridColumn = String((tile.col || 0) + 1);
 
                 if (tile.tile_url) {
                     const img = document.createElement("img");

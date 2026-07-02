@@ -137,7 +137,8 @@ class JigsawTileProvider:
             tile_info: Dict[str, Any] = {
                 "id": tile["id"],
                 "tile_url": tile_url,
-                "order": orders[idx],
+                "row": tile["row"],
+                "col": tile["col"],
             }
 
             manifest_tiles.append(tile_info)
